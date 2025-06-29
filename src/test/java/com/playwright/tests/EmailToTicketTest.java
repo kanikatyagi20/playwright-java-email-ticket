@@ -1,5 +1,6 @@
 package com.playwright.tests;
 import com.microsoft.playwright.*;
+import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import com.playwright.utils.ConfigReader;
 import org.testng.annotations.*;
@@ -26,6 +27,7 @@ public class EmailToTicketTest {
         String pass = ConfigReader.get("instance.pass");
         //page.navigate("https://support.dryice.ai");
         page.navigate(url);
+        page.reload();
         page.fill("input[name='user_email']", user);
         // Step 3: Wait for NEXT button to become enabled
         Locator nextButton = page.locator("text=NEXT");
@@ -36,6 +38,8 @@ public class EmailToTicketTest {
         page.fill("#password", pass);
         // Click the Sign In button
         page.click("#kc-login");
+        // Wait for full load
+        page.waitForLoadState(LoadState.LOAD);
         //page.waitForSelector("a[title='Application Menu']");
         page.click("a[title='Application Menu']");
         page.fill(".form-control", "Mailbox");
