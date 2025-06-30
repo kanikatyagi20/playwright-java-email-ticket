@@ -9,115 +9,141 @@ import java.util.List;
 import java.util.Map;
 
 public class EmailToTicketTestPage {
-    Page page;
+    private final Page page;
+    private final ExcelReader excelReader = new ExcelReader();
+    private Map<String, String> instanceData;
 
-    ExcelReader excelReader = new ExcelReader();
-    Map<String, String> instanceData;
+    private Locator inputUserEmail;
+    private Locator nextButton;
+    private Locator inputUsername;
+    private Locator inputPassword;
+    private Locator loginButton;
+    private Locator appMenuButton;
+    private Locator searchInput;
+    private Locator mailboxRow0;
+    private Locator mailboxCell;
+    private Locator mailboxEditButton;
+    private Locator mailboxActionsButton;
+    private Locator companyInput;
+    private Locator mailboxInput;
+    private Locator providerDropdown;
+    private Locator authTypeDropdown;
+    private Locator statusDropdown;
+    private Locator saveButton;
+    private Locator okButton;
+    private Locator settingsTab;
+    private Locator mailboxEmailInput;
+    private Locator mailboxPasswordInput;
+    private Locator mailboxSaveButton;
 
-    // 🔄 NEW: Load instance data once, and reuse in all methods
+    public EmailToTicketTestPage(Page page) {
+        this.page = page;
+        initializeLocators();
+    }
+
+    private void initializeLocators() {
+        inputUserEmail = page.locator("input[name='user_email']");
+        nextButton = page.locator("text=NEXT");
+        inputUsername = page.locator("#username");
+        inputPassword = page.locator("#password");
+        loginButton = page.locator("#kc-login");
+        appMenuButton = page.locator("a[title='Application Menu']");
+        searchInput = page.locator("input[id='search']");
+        mailboxRow0 = page.locator("div#row-0");
+        mailboxCell = mailboxRow0.locator("div[data-column-id='2']");
+        mailboxEditButton = page.locator("a[title='Edit']");
+        mailboxActionsButton = page.locator("a[title='Mailbox Actions']");
+        companyInput = page.locator("input[placeholder='Please choose...']");
+        mailboxInput = page.locator("input[name='MAILBOX_ID']");
+        providerDropdown = page.locator("select[name='MAILBOX_PROVIDER']");
+        authTypeDropdown = page.locator("select[name='AUTH_TYPE']");
+        statusDropdown = page.locator("select[name='STATUS']");
+        saveButton = page.locator("a[title='Save']");
+        okButton = page.locator("text=OK");
+        settingsTab = page.locator("text=Settings");
+        mailboxEmailInput = page.locator("#email");
+        mailboxPasswordInput = page.locator("#password");
+        mailboxSaveButton = page.locator("text=Save");
+    }
+
     public void loadInstanceData(String instanceName) {
         List<Map<String, String>> rows = excelReader.getDetailsForInstance(instanceName);
         if (rows.isEmpty()) {
             throw new IllegalArgumentException("No Excel data found for instance: " + instanceName);
         }
-        this.instanceData = rows.get(0);  // assuming single row match
+        this.instanceData = rows.get(0);
     }
 
     public void Login() {
-        if (instanceData == null) {
-            throw new IllegalStateException("Instance data not loaded. Call loadInstanceData() first.");
-        }
+        if (instanceData == null) throw new IllegalStateException("Instance data not loaded.");
 
-        // Get values from Excel
         String url = instanceData.get("url");
         String user = instanceData.get("username");
         String pass = instanceData.get("password");
 
         page.navigate(url);
         page.reload();
-        page.fill("input[name='user_email']", user);
 
-        // Step 3: Wait for NEXT button to become enabled
-        Locator nextButton = page.locator("text=NEXT");
+        if (inputUserEmail.count() > 0) {
+            inputUserEmail.fill(user);
+        }
+
         nextButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
-
-        // Step 4: Click the button
         nextButton.click();
-        page.fill("#username", user);
-        page.fill("#password", pass);
 
-        // Click the Sign In button
-        page.click("#kc-login");
+        inputUsername.fill(user);
+        inputPassword.fill(pass);
+        loginButton.click();
 
-        // Wait for full load
         page.waitForLoadState(LoadState.LOAD);
     }
 
     public void MailBoxConfiguration() {
-        if (instanceData == null) {
-            throw new IllegalStateException("Instance data not loaded. Call loadInstanceData() first.");
-        }
+        if (instanceData == null) throw new IllegalStateException("Instance data not loaded.");
 
-        // Get values from Excel
         String company = instanceData.get("company_name");
         String provider = instanceData.get("mailbox_provider");
         String authType = instanceData.get("auth_type");
         String status = instanceData.get("status");
+        String expectedMailbox = instanceData.get("mailbox_email");
 
-        page.click("a[title='Application Menu']");
+        appMenuButton.click();
         page.fill(".form-control", "Mailbox");
         page.click("text=Mailbox Configuration");
         page.waitForLoadState(LoadState.LOAD);
 
-        // Read mailbox email from Excel (you can also fall back to ConfigReader if needed)
-        String expectedMailbox = instanceData.get("mailbox_email");
-
-        page.fill("input[id='search']", expectedMailbox);
-        Locator row0 = page.locator("div#row-0");
-        row0.waitFor();  // Wait for row to appear
-
-        Locator mailboxCell = row0.locator("div[data-column-id='2']");
+        searchInput.fill(expectedMailbox);
+        mailboxRow0.waitFor();
         String mailbox = mailboxCell.innerText().trim();
 
         if (!mailbox.isEmpty()) {
-            row0.click();
-            page.click("a[title='Edit']");
+            mailboxRow0.click();
+            mailboxEditButton.click();
         } else {
-            page.waitForSelector("a[title='Mailbox Actions']");
-            page.click("a[title='Mailbox Actions']");
+            mailboxActionsButton.waitFor();
+            mailboxActionsButton.click();
         }
 
-        // Clear Company field
-        Locator companyInput = page.locator("input[placeholder='Please choose...']");
-        companyInput.fill("");  // clear it
-//        companyInput.press("Backspace");  // clear autofill hint if any
-
-        // Fill company field
-        page.fill("input[placeholder='Please choose...']", company);
+        companyInput.fill("");
+        companyInput.fill(company);
         page.click("a[id='-item-0']");
 
-        // Clear Mailbox field
-        page.fill("input[name='MAILBOX_ID']", "");  // clear
-//        page.press("input[name='MAILBOX_ID']", "Backspace");  // optional fallback
+        mailboxInput.fill("");
+        mailboxInput.fill(expectedMailbox);
 
-        // Fill mailbox field
-        page.fill("input[name='MAILBOX_ID']", expectedMailbox);
+        providerDropdown.selectOption("");
+        providerDropdown.selectOption(provider);
+        authTypeDropdown.selectOption("");
+        authTypeDropdown.selectOption(authType);
+        statusDropdown.selectOption("");
+        statusDropdown.selectOption(status);
 
-        // Reset Dropdowns by selecting first <option> (assumed to be "Select" or blank)
-        page.selectOption("select[name='MAILBOX_PROVIDER']", "");  // reset
-        page.selectOption("select[name='MAILBOX_PROVIDER']", provider);
-        page.selectOption("select[name='AUTH_TYPE']", "");         // reset
-        page.selectOption("select[name='AUTH_TYPE']", authType);
-        page.selectOption("select[name='STATUS']", "");            // reset
-        page.selectOption("select[name='STATUS']", status);
-        page.click("a[title='Save']");
-        page.click("text=OK");
+        saveButton.click();
+        okButton.click();
 
-        // Config mailbox
-        page.click("text=Settings");
-        page.fill("#email", instanceData.get("mailbox_email"));
-        page.fill("#password", instanceData.get("mailbox_password"));
-        page.click("text=Save");
+        settingsTab.click();
+        mailboxEmailInput.fill(instanceData.get("mailbox_email"));
+        mailboxPasswordInput.fill(instanceData.get("mailbox_password"));
+        mailboxSaveButton.click();
     }
-    //add credtion method
 }
