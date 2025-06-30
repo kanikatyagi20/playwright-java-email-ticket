@@ -3,7 +3,6 @@ package com.playwright;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
-import com.playwright.utils.ConfigReader;
 import com.playwright.utils.ExcelReader;
 
 import java.util.List;
