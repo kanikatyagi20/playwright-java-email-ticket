@@ -13,7 +13,7 @@ public class EmailToTicketTest {
     Playwright playwright;
     Browser browser;
     Page page;
-    EmailToTicketTestPage emailToTicketTestPage = new EmailToTicketTestPage();
+    EmailToTicketTestPage emailToTicketTestPage = new EmailToTicketTestPage(page);
 
     @BeforeMethod
     public void setup() {
