@@ -36,7 +36,14 @@
             <version>2.0.1</version>
         </dependency>
 
-    </dependencies>
+            <!-- Apache POI for XLSX files -->
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>5.2.5</version> <!-- latest as of mid-2024 -->
+            </dependency>
+        </dependencies>
+
     <build>
         <plugins>
 

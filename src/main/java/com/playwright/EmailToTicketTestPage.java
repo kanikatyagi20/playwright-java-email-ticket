@@ -37,7 +37,7 @@ public class EmailToTicketTestPage {
         page.click("text=Mailbox Configuration");
         page.waitForLoadState(LoadState.LOAD);
         String expectedMailbox = ConfigReader.get("mailbox.email");
-        page.fill("input[id='search']",expectedMailbox);
+        page.fill("input[id='search']", expectedMailbox);
         Locator row0 = page.locator("div#row-0");
         row0.waitFor();  // Wait for row to appear
 
