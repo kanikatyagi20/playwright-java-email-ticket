@@ -25,6 +25,10 @@ public class EmailToTicketTest {
         String url = ConfigReader.get("instance.url");
         String user = ConfigReader.get("instance.user");
         String pass = ConfigReader.get("instance.pass");
+        String company = ConfigReader.get("company.name");
+        String provider = ConfigReader.get("mailbox.provider");
+        String authType = ConfigReader.get("auth.type");
+        String status = ConfigReader.get("status");
         page.navigate(url);
         page.reload();
         page.fill("input[name='user_email']", user);
@@ -44,40 +48,31 @@ public class EmailToTicketTest {
         page.click("text=Mailbox Configuration");
         page.waitForLoadState(LoadState.LOAD);
         String expectedMailbox = ConfigReader.get("mailbox.email");
+        page.fill("input[id='search']",expectedMailbox);
+        Locator row0 = page.locator("div#row-0");
+        row0.waitFor();  // Wait for row to appear
 
-        Locator mailboxCells = page.locator("div[data-column-id='2']");
-        int count = mailboxCells.count();
-        boolean found = false;
-        for (int i = 0; i < count; i++) {
-            String actualMailbox = mailboxCells.nth(i).innerText().trim();
+        Locator mailboxCell = row0.locator("div[data-column-id='2']");
+        String mailbox = mailboxCell.innerText().trim();
 
-            if (actualMailbox.equalsIgnoreCase(expectedMailbox)) {
-                mailboxCells.nth(i).click();  // You can change this to click parent if needed
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
+        if (!mailbox.isEmpty()) {
+            row0.click();
+            page.click("a[title='Edit']");
+        } else {
             page.waitForSelector("a[title='Mailbox Actions']");
             page.click("a[title='Mailbox Actions']");
         }
-        page.click("a[title='Edit']");
-
-        String company = ConfigReader.get("company.name");
-        String provider = ConfigReader.get("mailbox.provider");
-        String authType = ConfigReader.get("auth.type");
-        String status = ConfigReader.get("status");
         // Clear Company field
         Locator companyInput = page.locator("input[placeholder='Please choose...']");
         companyInput.fill("");  // clear it
-        companyInput.press("Backspace");  // clear autofill hint if any
+//        companyInput.press("Backspace");  // clear autofill hint if any
         //fill
         page.fill("input[placeholder='Please choose...']", company);
         page.click("a[id='-item-0']");
 
 // Clear Mailbox field
         page.fill("input[name='MAILBOX_ID']", "");  // clear
-        page.press("input[name='MAILBOX_ID']", "Backspace");  // optional fallback
+//        page.press("input[name='MAILBOX_ID']", "Backspace");  // optional fallback
         page.fill("input[name='MAILBOX_ID']", expectedMailbox);
 // Reset Dropdowns by selecting first <option> (assumed to be "Select" or blank)
         page.selectOption("select[name='MAILBOX_PROVIDER']", "");  // reset
@@ -88,6 +83,7 @@ public class EmailToTicketTest {
         page.selectOption("select[name='STATUS']", status);
         page.click("a[title='Save']");
         page.click("text=OK");
+
         // Config mailbox
         page.click("text=Settings");
         page.fill("#email", ConfigReader.get("mailbox.email"));
