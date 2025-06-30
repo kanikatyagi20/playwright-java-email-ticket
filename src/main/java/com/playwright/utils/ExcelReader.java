@@ -9,10 +9,10 @@ import java.util.*;
 
 public class ExcelReader {
 
-    public static List<Map<String, String>> getDetailsForInstance(String instanceName) throws IOException {
+    public static List<Map<String, String>> getDetailsForInstance(String instanceName) {
         List<Map<String, String>> matchedRows = new ArrayList<>();
 
-        String filePath = "src/test/resources/data.xlsx";
+        String filePath = "src/test/resources/InstanceDetails.xlsx";
         String sheetName = "InstanceDetails";
 
         try (FileInputStream fis = new FileInputStream(filePath);
@@ -25,20 +25,21 @@ public class ExcelReader {
             if (headerRow == null) throw new IllegalStateException("No header row found.");
 
             // Map of column indexes to column names
-            Map<Integer, String> columnIndexToName = new HashMap<>();
+            Map<Integer, String> columnIndexToName = new LinkedHashMap<>();
             for (Cell cell : headerRow) {
                 columnIndexToName.put(cell.getColumnIndex(), cell.getStringCellValue().trim());
             }
 
             int instanceColumnIndex = -1;
             for (Map.Entry<Integer, String> entry : columnIndexToName.entrySet()) {
-                if (entry.getValue().equalsIgnoreCase("instance name")) {
+                if (entry.getValue().equalsIgnoreCase("Instance Name")) {
                     instanceColumnIndex = entry.getKey();
                     break;
                 }
             }
 
-            if (instanceColumnIndex == -1) throw new IllegalStateException("Column 'instance name' not found.");
+            if (instanceColumnIndex == -1)
+                throw new IllegalStateException("Column 'instance name' not found.");
 
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
@@ -54,6 +55,8 @@ public class ExcelReader {
                     matchedRows.add(rowData);
                 }
             }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read Excel file: " + filePath + " - " + e.getMessage(), e);
         }
 
         return matchedRows;

@@ -6,6 +6,8 @@ import com.playwright.EmailToTicketTestPage;
 import com.playwright.utils.ConfigReader;
 import org.testng.annotations.*;
 
+import java.io.IOException;
+
 
 public class EmailToTicketTest {
     Playwright playwright;
@@ -26,10 +28,7 @@ public class EmailToTicketTest {
     public void testEmailCreatesTicket() {
        emailToTicketTestPage.Login();
 
-       emailToTicketTestPage.MailBoxConfiguration(ConfigReader.get("company.name"),
-                ConfigReader.get("mailbox.provider"),
-                ConfigReader.get("auth.type"),
-                ConfigReader.get("status"));
+       emailToTicketTestPage.MailBoxConfiguration();
 
         page.click("text=Tickets");
         page.fill("#search", "Test Subject");
