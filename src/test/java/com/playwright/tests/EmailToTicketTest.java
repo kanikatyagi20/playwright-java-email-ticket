@@ -26,9 +26,15 @@ public class EmailToTicketTest {
 
     @Test
     public void testEmailCreatesTicket() {
+        emailToTicketTestPage.loadInstanceData("Test");
        emailToTicketTestPage.Login();
-
        emailToTicketTestPage.MailBoxConfiguration();
+       //add credtion
+        // email sender
+        //store subject
+        //subject - search - WIB-inc
+        // store INC ticket
+        //INC - email me search
 
         page.click("text=Tickets");
         page.fill("#search", "Test Subject");
