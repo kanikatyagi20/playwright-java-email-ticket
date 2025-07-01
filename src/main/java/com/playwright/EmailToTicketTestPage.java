@@ -4,6 +4,8 @@ import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import com.playwright.utils.ExcelReader;
+import org.apache.commons.codec.binary.StringUtils;
+import org.apache.poi.util.StringUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -11,7 +13,7 @@ import java.util.Map;
 public class EmailToTicketTestPage {
     private final Page page;
     private final ExcelReader excelReader = new ExcelReader();
-    private Map<String, String> instanceData;
+    private static Map<String, String> instanceData;
 
     private Locator inputUserEmail;
     private Locator nextButton;
@@ -35,6 +37,8 @@ public class EmailToTicketTestPage {
     private Locator mailboxEmailInput;
     private Locator mailboxPasswordInput;
     private Locator mailboxSaveButton;
+    private Locator editCredentials;
+    private Locator noRecordsText;
 
     public EmailToTicketTestPage(Page page) {
         this.page = page;
@@ -51,6 +55,7 @@ public class EmailToTicketTestPage {
         searchInput = page.locator("input[id='search']");
         mailboxRow0 = page.locator("div#row-0");
         mailboxCell = mailboxRow0.locator("div[data-column-id='2']");
+        noRecordsText = page.locator("text=There are no records to display");
         mailboxEditButton = page.locator("a[title='Edit']");
         mailboxActionsButton = page.locator("a[title='Mailbox Actions']");
         companyInput = page.locator("input[placeholder='Please choose...']");
@@ -64,14 +69,15 @@ public class EmailToTicketTestPage {
         mailboxEmailInput = page.locator("#email");
         mailboxPasswordInput = page.locator("#password");
         mailboxSaveButton = page.locator("text=Save");
+        editCredentials = page.locator("button[title='Edit']");
     }
 
-    public void loadInstanceData(String instanceName) {
-        List<Map<String, String>> rows = excelReader.getDetailsForInstance(instanceName);
+    public static void loadInstanceData(String instanceName) {
+        List<Map<String, String>> rows = ExcelReader.getDetailsForInstance(instanceName);
         if (rows.isEmpty()) {
             throw new IllegalArgumentException("No Excel data found for instance: " + instanceName);
         }
-        this.instanceData = rows.get(0);
+        instanceData = rows.get(0);
     }
 
     public void Login() {
@@ -113,10 +119,10 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
 
         searchInput.fill(expectedMailbox);
-        mailboxRow0.waitFor();
-        String mailbox = mailboxCell.innerText().trim();
+       // mailboxRow0.waitFor();
+        String mailbox = noRecordsText.innerText().trim();
 
-        if (!mailbox.isEmpty()) {
+        if ((StringUtil.isNotBlank(mailbox))&&(!mailbox.equalsIgnoreCase("There are no records to display"))) {
             mailboxRow0.click();
             mailboxEditButton.click();
         } else {
@@ -145,5 +151,33 @@ public class EmailToTicketTestPage {
         mailboxEmailInput.fill(instanceData.get("mailbox_email"));
         mailboxPasswordInput.fill(instanceData.get("mailbox_password"));
         mailboxSaveButton.click();
+    }
+    public void addCredentials() {
+        if (instanceData == null || instanceData.isEmpty()) {
+            throw new IllegalStateException("Instance data is not loaded. Call loadInstanceData() first.");
+        }
+        editCredentials.click();
+        Locator rows = page.locator("tbody tr");  // page is already available in the class
+        int rowCount = rows.count();
+
+        for (int i = 0; i < rowCount; i++) {
+            String keyUI = rows.nth(i).locator("td").nth(0).innerText().trim();
+            String actualValue = rows.nth(i).locator("td").nth(1).innerText().trim();
+
+            if (instanceData.containsKey(keyUI)) {
+                String expectedValue = instanceData.get(keyUI);
+
+                if (StringUtil.isBlank(actualValue)) {
+                    page.fill("input[name='SX_INBOUND']",expectedValue);
+                    System.out.println("✅ " + keyUI + ": MATCHED - " + actualValue);
+                } else {
+                    page.fill("input[name='SX_INBOUND']","");
+                    page.fill("input[name='SX_INBOUND']",expectedValue);
+                    System.out.println("❌ " + keyUI + ": MISMATCHED - Expected: " + expectedValue + ", Found: " + actualValue);
+                }
+            } else {
+                System.out.println("⚠️ " + keyUI + ": Not found in Excel data");
+            }
+        }
     }
 }

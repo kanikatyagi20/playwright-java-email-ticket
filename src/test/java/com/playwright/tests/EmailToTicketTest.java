@@ -13,7 +13,7 @@ public class EmailToTicketTest {
     Playwright playwright;
     Browser browser;
     Page page;
-    EmailToTicketTestPage emailToTicketTestPage = new EmailToTicketTestPage(page);
+    EmailToTicketTestPage emailToTicketTestPage ;
 
     @BeforeMethod
     public void setup() {
@@ -22,13 +22,16 @@ public class EmailToTicketTest {
                 new BrowserType.LaunchOptions().setHeadless(false)
         );
         page = browser.newPage();  // ✅ this.page is now initialized properly
+
     }
 
     @Test
     public void testEmailCreatesTicket() {
-        emailToTicketTestPage.loadInstanceData("Test");
+        EmailToTicketTestPage.loadInstanceData("DISC PROD");
+        emailToTicketTestPage = new EmailToTicketTestPage(page);
        emailToTicketTestPage.Login();
        emailToTicketTestPage.MailBoxConfiguration();
+        emailToTicketTestPage.addCredentials();
        //add credtion
         // email sender
         //store subject
