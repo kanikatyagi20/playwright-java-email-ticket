@@ -5,9 +5,14 @@ import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import com.playwright.EmailToTicketTestPage;
 import com.playwright.utils.ConfigReader;
+import com.playwright.utils.EmailSender;
 import org.testng.annotations.*;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
 
 
 public class EmailToTicketTest {
@@ -33,11 +38,26 @@ public class EmailToTicketTest {
         emailToTicketTestPage.login();
         emailToTicketTestPage.emailToTicketConfiguration();
 
-        // email sender
-        //store subject
-        //subject - search - WIB-inc
-        // store INC ticket
-        //INC - email me search
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String timestamp = LocalDateTime.now().format(formatter);
+        String subjectForEmail = "This ticket is created via Automation - " + timestamp;
+        String emailBody = "This is a test email body for ticket creation via automation at " + timestamp;
+
+        String ticketNumber=emailToTicketTestPage.sentEmailAndGetTicketNumber(subjectForEmail, emailBody);
+        String[] parts = ticketNumber.split("\n");
+        String[] ticketParts = parts[0].split("-");
+        String reqNumber = ticketParts[0];
+        String incNumber = ticketParts[1];
+
+        String ticketSubmitMail = "Incident "+reqNumber+" / "+incNumber+" has been logged";
+
+        List<Map<String, String>> mailReceived= emailToTicketTestPage.validateNotificationsReceived(ticketSubmitMail);
+        System.out.println("From: " + mailReceived.get(0).get("from"));
+        System.out.println("To: " + mailReceived.get(0).get("to"));
+        System.out.println("CC: " + mailReceived.get(0).get("cc"));
+        System.out.println("Subject: " + mailReceived.get(0).get("subject"));
+        System.out.println("Sent Date: " + mailReceived.get(0).get("sentDate"));
+        System.out.println("Content: " + mailReceived.get(0).get("content"));
     }
 
     @AfterMethod

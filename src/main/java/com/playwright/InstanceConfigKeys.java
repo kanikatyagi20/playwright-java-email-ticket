@@ -5,7 +5,7 @@ import java.util.Map;
 
 public enum InstanceConfigKeys {
     MailBox_CONFIGURATION("Mailbox Configuration"),
-
+    Work_Item_Board("Work Item Board"),
     INSTANCE_NAME("instanceName"),
     URL("url"),
     USERNAME("username"),

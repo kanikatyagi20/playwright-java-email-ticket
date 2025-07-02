@@ -3,8 +3,11 @@ package com.playwright;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
+import com.playwright.utils.EmailReader;
+import com.playwright.utils.EmailSender;
 import com.playwright.utils.ExcelReader;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +62,14 @@ public class EmailToTicketTestPage {
     private Locator searchedCompanySelect;
     private Locator guestAndOfferingSelect;
     private Locator closeButton;
+    private Locator workItemBoard;
+    private Locator incidentTab;
+    private Locator allButton;
+    private Locator summarySearchBox;
+    private Locator searchIcon;
+    private Locator incidentNoRecord;
+    private Locator incidentFirstRow;
+    private Locator ticketNumber;
 
     public EmailToTicketTestPage(Page page) {
         this.page = page;
@@ -95,7 +106,7 @@ public class EmailToTicketTestPage {
         objectId = page.locator("input[name='OBJECT_ID']");
         displayName = page.locator("input[name='DISPLAY_NAME']");
         saveCredentials = page.locator("text=Save");
-        applicationMenuSearch = page.locator(".form-control");
+        applicationMenuSearch = page.locator(".modulePopupSerch input.form-control");
         mailBoxConfigurationMenu = page.locator("text=Mailbox Configuration");
         mailboxActions = page.locator("a[title='Mailbox Actions'][href='/systemConfig']");
         mailToTicketTab = page.locator("button[title='Mail to Ticket']");
@@ -112,6 +123,14 @@ public class EmailToTicketTestPage {
         selectGuestUser = page.locator("//label[contains(text(), 'Guest User')]/following::input[1]");
         searchedCompanySelect = page.locator("a[id='-item-0']");
         guestAndOfferingSelect = page.locator("li[id='react-autowhatever-1--item-0']");
+        workItemBoard = page.locator("text=Work Item Board");
+        incidentTab = page.locator("a[title=Incident]");
+        allButton = page.locator("button[title=All]");
+        summarySearchBox = page.locator("//th[div[text()='Summary']]//input[@placeholder='Search here']");
+        searchIcon = page.locator("a[title='search']");
+        incidentNoRecord = page.locator("text=There is no matching data available");
+        incidentFirstRow = page.locator("td[class='deskReqNum']");
+        ticketNumber = page.locator("div[class='rPageHeading']");
     }
 
     public static void loadInstanceData(String instanceName) {
@@ -147,8 +166,23 @@ public class EmailToTicketTestPage {
 
     public void navigateToMailboxConfiguration() {
         appMenuButton.click();
+        page.waitForLoadState(LoadState.LOAD);
         applicationMenuSearch.fill(InstanceConfigKeys.MailBox_CONFIGURATION.getValue());
+        page.waitForLoadState(LoadState.LOAD);
         mailBoxConfigurationMenu.click();
+        page.waitForLoadState(LoadState.LOAD);
+    }
+
+    public void navigateToIncidentListPage() {
+        appMenuButton.click();
+        page.waitForLoadState(LoadState.LOAD);
+        applicationMenuSearch.fill(InstanceConfigKeys.Work_Item_Board.getValue());
+        page.waitForLoadState(LoadState.LOAD);
+        workItemBoard.click();
+        page.waitForLoadState(LoadState.LOAD);
+        incidentTab.click();
+        page.waitForLoadState(LoadState.LOAD);
+        allButton.click();
         page.waitForLoadState(LoadState.LOAD);
     }
 
@@ -278,5 +312,56 @@ public class EmailToTicketTestPage {
 
     public void surveyApprovalConfiguation(String mailBoxAction) {
 
+    }
+
+    public String sentEmailAndGetTicketNumber(String subject, String body) {
+        EmailSender.sendEmail(instanceData.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue()), subject, body);
+        navigateToIncidentListPage();
+
+        long startTime = System.currentTimeMillis();
+        long timeout = 5 * 60 * 1000; // 5 minutes
+        long interval = 10 * 1000;    // 10 seconds
+
+        while (System.currentTimeMillis() - startTime < timeout) {
+            summarySearchBox.fill("");
+            summarySearchBox.fill(subject);
+            searchIcon.click();
+            page.waitForLoadState(LoadState.LOAD);
+
+            if (incidentFirstRow.count() > 0) {
+                incidentFirstRow.first().click();
+                page.waitForLoadState(LoadState.LOAD);
+                return ticketNumber.innerText().trim();
+            }
+
+            try {
+                Thread.sleep(interval);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Thread was interrupted during sleep", e);
+            }
+        }
+
+        return "No ticket number found";
+    }
+
+    public List<Map<String, String>> validateNotificationsReceived(String subject) {
+        long startTime = System.currentTimeMillis();
+        long timeout = 5 * 60 * 1000;
+        long interval = 10 * 1000;
+
+        while (System.currentTimeMillis() - startTime < timeout) {
+            List<Map<String, String>> emails = EmailReader.readEmailBySubject(subject);
+            if (emails != null && !emails.isEmpty()) {
+                return emails;
+            }
+            try {
+                Thread.sleep(interval);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted status
+                throw new RuntimeException("Thread was interrupted during sleep", e);
+            }
+        }
+        return Collections.emptyList(); // Or return null if you prefer
     }
 }
