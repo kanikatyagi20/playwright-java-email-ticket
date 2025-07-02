@@ -64,7 +64,7 @@ public class EmailToTicketTestPage {
         authTypeDropdown = page.locator("select[name='AUTH_TYPE']");
         statusDropdown = page.locator("select[name='STATUS']");
         saveButton = page.locator("a[title='Save']");
-        okButton = page.locator("text=OK");
+        okButton = page.locator("//button[contains(@class, 'swal2-confirm') and normalize-space(text())='OK']");
         settingsTab = page.locator("text=Settings");
         mailboxEmailInput = page.locator("#email");
         mailboxPasswordInput = page.locator("#password");
@@ -119,7 +119,6 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
 
         searchInput.fill(expectedMailbox);
-        // mailboxRow0.waitFor();
 
         if (noRecordsText.count() > 0) {
             mailboxConfigCreateButton.waitFor();
@@ -138,10 +137,9 @@ public class EmailToTicketTestPage {
         saveButton.click();
         okButton.click();
 
-        settingsTab.click();
-        mailboxEmailInput.fill(instanceData.get("mailbox_email"));
-        mailboxPasswordInput.fill(instanceData.get("mailbox_password"));
-        mailboxSaveButton.click();
+        searchInput.fill(expectedMailbox);
+        mailboxRow0.click();
+        mailboxEditButton.click();
     }
 
     public void addCredentials() {
