@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 
 public class EmailToTicketTest {
@@ -40,18 +41,21 @@ public class EmailToTicketTest {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String timestamp = LocalDateTime.now().format(formatter);
-        String subjectForEmail = "This ticket is created via Automation - " + timestamp;
-        String emailBody = "This is a test email body for ticket creation via automation at " + timestamp;
 
-        String ticketNumber=emailToTicketTestPage.sentEmailAndGetTicketNumber(subjectForEmail, emailBody);
+        String randomId = UUID.randomUUID().toString().substring(0, 20);
+
+        String subjectForEmail = "Testing Ticket - " + randomId + timestamp;
+        String emailBody = "Test description for ticket: " + randomId + " at " + timestamp;
+
+        String ticketNumber = emailToTicketTestPage.sentEmailAndGetTicketNumber(subjectForEmail, emailBody);
         String[] parts = ticketNumber.split("\n");
         String[] ticketParts = parts[0].split("-");
         String reqNumber = ticketParts[0];
         String incNumber = ticketParts[1];
 
-        String ticketSubmitMail = "Incident "+reqNumber+" / "+incNumber+" has been logged";
+        String ticketSubmitMail = "Incident " + reqNumber + " / " + incNumber + " has been logged";
 
-        List<Map<String, String>> mailReceived= emailToTicketTestPage.validateNotificationsReceived(ticketSubmitMail);
+        List<Map<String, String>> mailReceived = emailToTicketTestPage.validateNotificationsReceived(ticketSubmitMail);
         System.out.println("From: " + mailReceived.get(0).get("from"));
         System.out.println("To: " + mailReceived.get(0).get("to"));
         System.out.println("CC: " + mailReceived.get(0).get("cc"));
