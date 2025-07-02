@@ -20,8 +20,8 @@ public class EmailToTicketTestPage {
     private Locator appMenuButton;
     private Locator searchInput;
     private Locator mailboxRow0;
-    private Locator mailboxEditButton;
-    private Locator mailboxConfigCreateButton;
+    private Locator editButton;
+    private Locator createButton;
     private Locator companyInput;
     private Locator mailboxInput;
     private Locator providerDropdown;
@@ -57,7 +57,8 @@ public class EmailToTicketTestPage {
     private Locator userVerificationType;
     private Locator selectGuestUser;
     private Locator searchedCompanySelect;
-    private Locator guestUserSelect;
+    private Locator guestAndOfferingSelect;
+    private Locator closeButton;
 
     public EmailToTicketTestPage(Page page) {
         this.page = page;
@@ -74,14 +75,15 @@ public class EmailToTicketTestPage {
         searchInput = page.locator("input[id='search']");
         mailboxRow0 = page.locator("div#row-0");
         noRecordsText = page.locator("text=There are no records to display");
-        mailboxEditButton = page.locator("a[title='Edit']");
-        mailboxConfigCreateButton = page.locator("a[title='Mailbox Actions'][href='/mailboxConfig']");
+        editButton = page.locator("a[title='Edit']");
+        createButton = page.locator("a[class='myBt plus fillBtn']");
         companyInput = page.locator("input[placeholder='Please choose...']");
         mailboxInput = page.locator("input[name='MAILBOX_ID']");
         providerDropdown = page.locator("select[name='MAILBOX_PROVIDER']");
         authTypeDropdown = page.locator("select[name='AUTH_TYPE']");
         statusDropdown = page.locator("select[name='STATUS']");
         saveButton = page.locator("a[title='Save']");
+        closeButton = page.locator("a[title='Close']");
         okButton = page.locator("//button[contains(@class, 'swal2-confirm') and normalize-space(text())='OK']");
         editCredentials = page.locator("button[title='Edit']");
         popUpText = page.locator("h2[class='swal2-title']");
@@ -100,16 +102,16 @@ public class EmailToTicketTestPage {
         surveyTab = page.locator("button[title='Survey']");
         approvalTab = page.locator("button[title='Approval']");
         mailboxDropdown = page.locator("select[name='MAILBOX_ID']");
-        serviceInput = page.locator("input[placeholder='Enter Service Name']");
-        whiteListedDomains = page.locator("input[name='WHITELISTED_DOMAINS']");
-        alwaysException = page.locator("input[name='ALWAYS_EXCEPTION']");
-        neverException = page.locator("input[name='NEVER_EXCEPTION']");
+        serviceInput = page.locator("//label[contains(text(), 'Service')]/following::input[1]");
+        whiteListedDomains = page.locator("//label[contains(text(), 'Whitelisted Domains')]/following::input[1]");
+        alwaysException = page.locator("//label[contains(text(), 'Always Process Exception')]/following::input[1]");
+        neverException = page.locator("//label[contains(text(), 'Never Process Exception')]/following::input[1]");
         impact = page.locator("select[name='impact']");
         urgency = page.locator("select[name='urgency']");
         userVerificationType = page.locator("select[name='ACTIONS']");
-        selectGuestUser = page.locator("input[placeholder='User Name']");
+        selectGuestUser = page.locator("//label[contains(text(), 'Guest User')]/following::input[1]");
         searchedCompanySelect = page.locator("a[id='-item-0']");
-        guestUserSelect = page.locator("li[id='react-autowhatever-1--item-0']");
+        guestAndOfferingSelect = page.locator("li[id='react-autowhatever-1--item-0']");
     }
 
     public static void loadInstanceData(String instanceName) {
@@ -151,34 +153,35 @@ public class EmailToTicketTestPage {
     }
 
     public void searchMailbox(String expectedMailbox) {
+        page.waitForLoadState(LoadState.LOAD);
         searchInput.fill(expectedMailbox);
-
         if (noRecordsText.count() > 0) {
-            mailboxConfigCreateButton.waitFor();
-            mailboxConfigCreateButton.click();
+            createButton.waitFor();
+            createButton.click();
         } else {
+            page.waitForLoadState(LoadState.LOAD);
             mailboxRow0.click();
-            mailboxEditButton.click();
+            editButton.waitFor();
+            editButton.click();
         }
     }
 
-    public void mailBoxConfiguration() {
+    public void mailBoxConfiguration(String expectedMailbox, String company) {
         if (instanceData == null) throw new IllegalStateException("Instance data not loaded.");
-        String company = instanceData.get(InstanceConfigKeys.COMPANY_NAME.getValue());
         String vendor = instanceData.get(InstanceConfigKeys.VENDOR.getValue());
         String authType = instanceData.get(InstanceConfigKeys.AUTH_TYPE.getValue());
         String status = instanceData.get(InstanceConfigKeys.STATUS.getValue());
-        String expectedMailbox = instanceData.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue());
 
-        navigateToMailboxConfiguration();
+        //Validating if Mailbox already exists
         searchMailbox(expectedMailbox);
+
+        //Create or Edit Mailbox Configuration
         companyInput.fill(company);
         searchedCompanySelect.click();
         mailboxInput.fill(expectedMailbox);
         providerDropdown.selectOption(vendor);
         authTypeDropdown.selectOption(authType);
         statusDropdown.selectOption(status);
-
         saveButton.click();
 
         String popUpMessage = popUpText.innerText().trim();
@@ -220,13 +223,60 @@ public class EmailToTicketTestPage {
             default -> throw new IllegalArgumentException("Unsupported vendor: " + vendor);
         }
         saveCredentials.click();
+        page.waitForLoadState(LoadState.LOAD);
+        closeButton.click();
+        page.waitForLoadState(LoadState.LOAD);
     }
 
-    public void emailToTicket(String mailbox, String userVerificationType) {
+    public void emailToTicketConfiguration() {
 
+        //navigating to Mailbox Configuration page
+        navigateToMailboxConfiguration();
+
+        String mailbox = instanceData.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue());
+        String company = instanceData.get(InstanceConfigKeys.COMPANY_NAME.getValue());
+
+        //Configuring Mailbox and its Credentials
+        mailBoxConfiguration(mailbox, company);
+
+        //navigating to Mailbox Actions
+        mailboxActions.click();
+        mailToTicketTab.click();
+        searchMailbox(mailbox);
+
+        page.waitForLoadState(LoadState.LOAD);
+
+        //Filling details for Email to Ticket
+        companyInput.fill(company);
+        searchedCompanySelect.click();
+        mailboxDropdown.selectOption(mailbox);
+        serviceInput.fill(instanceData.get(InstanceConfigKeys.OFFERING_NAME.getValue()));
+        guestAndOfferingSelect.click();
+
+        //Filling Mailbox Filters
+        whiteListedDomains.fill(instanceData.get(InstanceConfigKeys.WHITELISTED_DOMAINS.getValue()));
+        alwaysException.fill(instanceData.get(InstanceConfigKeys.ALWAYS_PROCESS_EXCEPTION.getValue()));
+        neverException.fill(instanceData.get(InstanceConfigKeys.NEVER_PROCESS_EXCEPTION.getValue()));
+
+        //Filling Defaults values
+        impact.selectOption(instanceData.get(InstanceConfigKeys.DEFAULT_IMPACT.getValue()));
+        urgency.selectOption(instanceData.get(InstanceConfigKeys.DEFAULT_URGENCY.getValue()));
+
+        //Filling User Verification details
+        userVerificationType.selectOption(instanceData.get(InstanceConfigKeys.USER_VERIFICATION_TYPE.getValue()));
+
+        if (instanceData.get(InstanceConfigKeys.USER_VERIFICATION_TYPE.getValue()).equalsIgnoreCase("Create with Guest Account")) {
+            selectGuestUser.fill(instanceData.get(InstanceConfigKeys.GUEST_USER_EMAIL.getValue()));
+            page.waitForLoadState(LoadState.LOAD);
+            guestAndOfferingSelect.click();
+        }
+        statusDropdown.selectOption(instanceData.get(InstanceConfigKeys.ACTION_STATUS.getValue()));
+        saveButton.click();
+        okButton.click();
+        page.waitForLoadState(LoadState.LOAD);
     }
 
-    public void surveyApprovalConfiguation(String mailbox, String mailBoxAction) {
+    public void surveyApprovalConfiguation(String mailBoxAction) {
 
     }
 }

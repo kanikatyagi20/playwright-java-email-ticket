@@ -31,8 +31,8 @@ public class EmailToTicketTest {
         EmailToTicketTestPage.loadInstanceData("TestingProd");
         emailToTicketTestPage = new EmailToTicketTestPage(page);
         emailToTicketTestPage.login();
-        emailToTicketTestPage.mailBoxConfiguration();
-        //add credtion
+        emailToTicketTestPage.emailToTicketConfiguration();
+
         // email sender
         //store subject
         //subject - search - WIB-inc
