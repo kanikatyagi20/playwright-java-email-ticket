@@ -4,15 +4,12 @@ import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import com.playwright.utils.ExcelReader;
-import org.apache.commons.codec.binary.StringUtils;
-import org.apache.poi.util.StringUtil;
 
 import java.util.List;
 import java.util.Map;
 
 public class EmailToTicketTestPage {
     private final Page page;
-    private final ExcelReader excelReader = new ExcelReader();
     private static Map<String, String> instanceData;
 
     private Locator inputUserEmail;
@@ -23,7 +20,6 @@ public class EmailToTicketTestPage {
     private Locator appMenuButton;
     private Locator searchInput;
     private Locator mailboxRow0;
-    private Locator mailboxCell;
     private Locator mailboxEditButton;
     private Locator mailboxConfigCreateButton;
     private Locator companyInput;
@@ -33,10 +29,6 @@ public class EmailToTicketTestPage {
     private Locator statusDropdown;
     private Locator saveButton;
     private Locator okButton;
-    private Locator settingsTab;
-    private Locator mailboxEmailInput;
-    private Locator mailboxPasswordInput;
-    private Locator mailboxSaveButton;
     private Locator editCredentials;
     private Locator noRecordsText;
     private Locator popUpText;
@@ -48,6 +40,8 @@ public class EmailToTicketTestPage {
     private Locator displayName;
     private Locator objectId;
     private Locator saveCredentials;
+    private Locator applicationMenuSearch;
+    private Locator mailBoxConfigurationMenu;
 
     public EmailToTicketTestPage(Page page) {
         this.page = page;
@@ -63,7 +57,6 @@ public class EmailToTicketTestPage {
         appMenuButton = page.locator("a[title='Application Menu']");
         searchInput = page.locator("input[id='search']");
         mailboxRow0 = page.locator("div#row-0");
-        mailboxCell = mailboxRow0.locator("div[data-column-id='2']");
         noRecordsText = page.locator("text=There are no records to display");
         mailboxEditButton = page.locator("a[title='Edit']");
         mailboxConfigCreateButton = page.locator("a[title='Mailbox Actions'][href='/mailboxConfig']");
@@ -74,10 +67,6 @@ public class EmailToTicketTestPage {
         statusDropdown = page.locator("select[name='STATUS']");
         saveButton = page.locator("a[title='Save']");
         okButton = page.locator("//button[contains(@class, 'swal2-confirm') and normalize-space(text())='OK']");
-        settingsTab = page.locator("text=Settings");
-        mailboxEmailInput = page.locator("#email");
-        mailboxPasswordInput = page.locator("#password");
-        mailboxSaveButton = page.locator("text=Save");
         editCredentials = page.locator("button[title='Edit']");
         popUpText = page.locator("h2[class='swal2-title']");
         addCredentials = page.locator("button[title='Add Credentials']");
@@ -88,6 +77,8 @@ public class EmailToTicketTestPage {
         objectId = page.locator("input[name='OBJECT_ID']");
         displayName = page.locator("input[name='DISPLAY_NAME']");
         saveCredentials = page.locator("text=Save");
+        applicationMenuSearch = page.locator(".form-control");
+        mailBoxConfigurationMenu = page.locator("text=Mailbox Configuration");
     }
 
     public static void loadInstanceData(String instanceName) {
@@ -100,9 +91,9 @@ public class EmailToTicketTestPage {
 
     public void login() {
         if (instanceData == null) throw new IllegalStateException("Instance data not loaded.");
-        String url = instanceData.get("url");
-        String user = instanceData.get("username");
-        String pass = instanceData.get("password");
+        String url = instanceData.get(InstanceConfigKeys.URL.getValue());
+        String user = instanceData.get(InstanceConfigKeys.USERNAME.getValue());
+        String pass = instanceData.get(InstanceConfigKeys.PASSWORD.getValue());
 
         page.navigate(url);
         page.reload();
@@ -121,6 +112,13 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
     }
 
+    public void navigateToMailboxConfiguration() {
+        appMenuButton.click();
+        applicationMenuSearch.fill("Mailbox");
+        mailBoxConfigurationMenu.click();
+        page.waitForLoadState(LoadState.LOAD);
+    }
+
     public void searchMailbox(String expectedMailbox) {
         searchInput.fill(expectedMailbox);
 
@@ -135,20 +133,14 @@ public class EmailToTicketTestPage {
 
     public void mailBoxConfiguration() {
         if (instanceData == null) throw new IllegalStateException("Instance data not loaded.");
+        String company = instanceData.get(InstanceConfigKeys.COMPANY_NAME.getValue());
+        String vendor = instanceData.get(InstanceConfigKeys.VENDOR.getValue());
+        String authType = instanceData.get(InstanceConfigKeys.AUTH_TYPE.getValue());
+        String status = instanceData.get(InstanceConfigKeys.STATUS.getValue());
+        String expectedMailbox = instanceData.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue());
 
-        String company = instanceData.get("company_name");
-        String vendor = instanceData.get("vendor");
-        String authType = instanceData.get("auth_type");
-        String status = instanceData.get("status");
-        String expectedMailbox = instanceData.get("mailbox_email");
-
-        appMenuButton.click();
-        page.fill(".form-control", "Mailbox");
-        page.click("text=Mailbox Configuration");
-        page.waitForLoadState(LoadState.LOAD);
-
+        navigateToMailboxConfiguration();
         searchMailbox(expectedMailbox);
-
         companyInput.fill(company);
         page.click("a[id='-item-0']");
         mailboxInput.fill(expectedMailbox);
@@ -183,20 +175,27 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
 
         // Fill common credentials
-        applicationId.fill(instanceData.get("application_Id"));
-        clientId.fill(instanceData.get("tenant_id"));
-        secretKey.fill(instanceData.get("secret_key"));
+        applicationId.fill(instanceData.get(InstanceConfigKeys.APPLICATION_ID.getValue()));
+        clientId.fill(instanceData.get(InstanceConfigKeys.TENANT_ID.getValue()));
+        secretKey.fill(instanceData.get(InstanceConfigKeys.SECRET_KEY.getValue()));
 
         // Fill vendor-specific fields
         switch (vendor.toLowerCase()) {
             case "outlook" -> {
-                objectId.fill(instanceData.get("object_id"));
-                displayName.fill(instanceData.get("display_name"));
+                objectId.fill(instanceData.get(InstanceConfigKeys.OBJECT_ID.getValue()));
+                displayName.fill(instanceData.get(InstanceConfigKeys.DISPLAY_NAME.getValue()));
             }
-            case "gmail" -> refreshToken.fill(instanceData.get("sx_inbound"));
+            case "gmail" -> refreshToken.fill(instanceData.get(InstanceConfigKeys.SX_INBOUND.getValue()));
             default -> throw new IllegalArgumentException("Unsupported vendor: " + vendor);
         }
-
         saveCredentials.click();
+    }
+
+    public void emailToTicket(String mailbox, String userVerificationType) {
+
+    }
+
+    public void surveyApprovalConfiguation(String mailbox, String mailBoxAction) {
+
     }
 }
