@@ -25,7 +25,7 @@ public class EmailToTicketTestPage {
     private Locator mailboxRow0;
     private Locator mailboxCell;
     private Locator mailboxEditButton;
-    private Locator mailboxActionsButton;
+    private Locator mailboxConfigCreateButton;
     private Locator companyInput;
     private Locator mailboxInput;
     private Locator providerDropdown;
@@ -57,7 +57,7 @@ public class EmailToTicketTestPage {
         mailboxCell = mailboxRow0.locator("div[data-column-id='2']");
         noRecordsText = page.locator("text=There are no records to display");
         mailboxEditButton = page.locator("a[title='Edit']");
-        mailboxActionsButton = page.locator("a[title='Mailbox Actions']");
+        mailboxConfigCreateButton = page.locator("a[title='Mailbox Actions'][href='/mailboxConfig']");
         companyInput = page.locator("input[placeholder='Please choose...']");
         mailboxInput = page.locator("input[name='MAILBOX_ID']");
         providerDropdown = page.locator("select[name='MAILBOX_PROVIDER']");
@@ -108,7 +108,7 @@ public class EmailToTicketTestPage {
         if (instanceData == null) throw new IllegalStateException("Instance data not loaded.");
 
         String company = instanceData.get("company_name");
-        String provider = instanceData.get("mailbox_provider");
+        String vendor = instanceData.get("vendor");
         String authType = instanceData.get("auth_type");
         String status = instanceData.get("status");
         String expectedMailbox = instanceData.get("mailbox_email");
@@ -119,29 +119,20 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
 
         searchInput.fill(expectedMailbox);
-       // mailboxRow0.waitFor();
-        String mailbox = noRecordsText.innerText().trim();
+        // mailboxRow0.waitFor();
 
-        if ((StringUtil.isNotBlank(mailbox))&&(!mailbox.equalsIgnoreCase("There are no records to display"))) {
+        if (noRecordsText.count() > 0) {
+            mailboxConfigCreateButton.waitFor();
+            mailboxConfigCreateButton.click();
+        } else {
             mailboxRow0.click();
             mailboxEditButton.click();
-        } else {
-            mailboxActionsButton.waitFor();
-            mailboxActionsButton.click();
         }
-
-        companyInput.fill("");
         companyInput.fill(company);
         page.click("a[id='-item-0']");
-
-        mailboxInput.fill("");
         mailboxInput.fill(expectedMailbox);
-
-        providerDropdown.selectOption("");
-        providerDropdown.selectOption(provider);
-        authTypeDropdown.selectOption("");
+        providerDropdown.selectOption(vendor);
         authTypeDropdown.selectOption(authType);
-        statusDropdown.selectOption("");
         statusDropdown.selectOption(status);
 
         saveButton.click();
@@ -152,6 +143,7 @@ public class EmailToTicketTestPage {
         mailboxPasswordInput.fill(instanceData.get("mailbox_password"));
         mailboxSaveButton.click();
     }
+
     public void addCredentials() {
         if (instanceData == null || instanceData.isEmpty()) {
             throw new IllegalStateException("Instance data is not loaded. Call loadInstanceData() first.");
@@ -168,11 +160,11 @@ public class EmailToTicketTestPage {
                 String expectedValue = instanceData.get(keyUI);
 
                 if (StringUtil.isBlank(actualValue)) {
-                    page.fill("input[name='SX_INBOUND']",expectedValue);
+                    page.fill("input[name='SX_INBOUND']", expectedValue);
                     System.out.println("✅ " + keyUI + ": MATCHED - " + actualValue);
                 } else {
-                    page.fill("input[name='SX_INBOUND']","");
-                    page.fill("input[name='SX_INBOUND']",expectedValue);
+                    page.fill("input[name='SX_INBOUND']", "");
+                    page.fill("input[name='SX_INBOUND']", expectedValue);
                     System.out.println("❌ " + keyUI + ": MISMATCHED - Expected: " + expectedValue + ", Found: " + actualValue);
                 }
             } else {

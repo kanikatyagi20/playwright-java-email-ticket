@@ -1,4 +1,5 @@
 package com.playwright.tests;
+
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
@@ -13,7 +14,7 @@ public class EmailToTicketTest {
     Playwright playwright;
     Browser browser;
     Page page;
-    EmailToTicketTestPage emailToTicketTestPage ;
+    EmailToTicketTestPage emailToTicketTestPage;
 
     @BeforeMethod
     public void setup() {
@@ -29,10 +30,10 @@ public class EmailToTicketTest {
     public void testEmailCreatesTicket() {
         EmailToTicketTestPage.loadInstanceData("DISC PROD");
         emailToTicketTestPage = new EmailToTicketTestPage(page);
-       emailToTicketTestPage.Login();
-       emailToTicketTestPage.MailBoxConfiguration();
+        emailToTicketTestPage.Login();
+        emailToTicketTestPage.MailBoxConfiguration();
         emailToTicketTestPage.addCredentials();
-       //add credtion
+        //add credtion
         // email sender
         //store subject
         //subject - search - WIB-inc
