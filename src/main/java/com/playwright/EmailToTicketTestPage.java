@@ -45,11 +45,9 @@ public class EmailToTicketTestPage {
     private Locator applicationId;
     private Locator clientId;
     private Locator secretKey;
-
     private Locator displayName;
     private Locator objectId;
     private Locator saveCredentials;
-
 
     public EmailToTicketTestPage(Page page) {
         this.page = page;
@@ -100,9 +98,8 @@ public class EmailToTicketTestPage {
         instanceData = rows.get(0);
     }
 
-    public void Login() {
+    public void login() {
         if (instanceData == null) throw new IllegalStateException("Instance data not loaded.");
-
         String url = instanceData.get("url");
         String user = instanceData.get("username");
         String pass = instanceData.get("password");
@@ -136,7 +133,7 @@ public class EmailToTicketTestPage {
         }
     }
 
-    public void MailBoxConfiguration() {
+    public void mailBoxConfiguration() {
         if (instanceData == null) throw new IllegalStateException("Instance data not loaded.");
 
         String company = instanceData.get("company_name");
@@ -180,6 +177,7 @@ public class EmailToTicketTestPage {
             throw new IllegalStateException("Instance data is not loaded. Call loadInstanceData() first.");
         }
         page.waitForLoadState(LoadState.LOAD);
+
         // Click on Add or Edit button
         (addCredentials.count() > 0 ? addCredentials : editCredentials).click();
         page.waitForLoadState(LoadState.LOAD);

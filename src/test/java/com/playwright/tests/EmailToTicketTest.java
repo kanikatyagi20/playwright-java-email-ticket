@@ -30,8 +30,8 @@ public class EmailToTicketTest {
     public void testEmailCreatesTicket() {
         EmailToTicketTestPage.loadInstanceData("TestingProd");
         emailToTicketTestPage = new EmailToTicketTestPage(page);
-        emailToTicketTestPage.Login();
-        emailToTicketTestPage.MailBoxConfiguration();
+        emailToTicketTestPage.login();
+        emailToTicketTestPage.mailBoxConfiguration();
         //add credtion
         // email sender
         //store subject
