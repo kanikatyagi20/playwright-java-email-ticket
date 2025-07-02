@@ -67,9 +67,12 @@ public class EmailToTicketTestPage {
     private Locator allButton;
     private Locator summarySearchBox;
     private Locator searchIcon;
-    private Locator incidentNoRecord;
     private Locator incidentFirstRow;
     private Locator ticketNumber;
+    private Locator globalSearchBar;
+    private Locator globalSearchIcon;
+    private Locator issueDescription;
+    private Locator additionalInformation;
 
     public EmailToTicketTestPage(Page page) {
         this.page = page;
@@ -128,9 +131,13 @@ public class EmailToTicketTestPage {
         allButton = page.locator("button[title=All]");
         summarySearchBox = page.locator("//th[div[text()='Summary']]//input[@placeholder='Search here']");
         searchIcon = page.locator("a[title='search']");
-        incidentNoRecord = page.locator("text=There is no matching data available");
         incidentFirstRow = page.locator("td[class='deskReqNum']");
         ticketNumber = page.locator("div[class='rPageHeading']");
+        globalSearchBar = page.locator("input[placeholder='Search here...']");
+        globalSearchIcon = page.locator("a[title='Search']");
+        issueDescription = page.locator("textarea[name='issueDescription']");
+        additionalInformation = page.locator("div[class='ql-editor']");
+
     }
 
     public static void loadInstanceData(String instanceName) {
@@ -184,6 +191,23 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
         allButton.click();
         page.waitForLoadState(LoadState.LOAD);
+    }
+
+    public void searchIncidentFromGlobalSearch(String ticketNumber) {
+        appMenuButton.click();
+        page.waitForLoadState(LoadState.LOAD);
+        applicationMenuSearch.fill(InstanceConfigKeys.Work_Item_Board.getValue());
+        page.waitForLoadState(LoadState.LOAD);
+        workItemBoard.click();
+        page.waitForLoadState(LoadState.LOAD);
+
+        globalSearchBar.fill(ticketNumber);
+        Page newTab = page.waitForPopup(() -> {
+            globalSearchIcon.click();
+        });
+        newTab.waitForLoadState(LoadState.LOAD);
+        page.close();
+        newTab.bringToFront();
     }
 
     public void searchMailbox(String expectedMailbox) {
@@ -362,5 +386,12 @@ public class EmailToTicketTestPage {
             }
         }
         return Collections.emptyList(); // Or return null if you prefer
+    }
+
+    public void validateTicketDetails(String ticketNumber) {
+        searchIncidentFromGlobalSearch(ticketNumber);
+        issueDescription.innerText();
+        additionalInformation.innerText();
+
     }
 }
