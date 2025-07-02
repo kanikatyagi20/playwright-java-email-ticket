@@ -40,6 +40,16 @@ public class EmailToTicketTestPage {
     private Locator editCredentials;
     private Locator noRecordsText;
     private Locator popUpText;
+    private Locator addCredentials;
+    private Locator refreshToken;
+    private Locator applicationId;
+    private Locator clientId;
+    private Locator secretKey;
+
+    private Locator displayName;
+    private Locator objectId;
+    private Locator saveCredentials;
+
 
     public EmailToTicketTestPage(Page page) {
         this.page = page;
@@ -72,6 +82,14 @@ public class EmailToTicketTestPage {
         mailboxSaveButton = page.locator("text=Save");
         editCredentials = page.locator("button[title='Edit']");
         popUpText = page.locator("h2[class='swal2-title']");
+        addCredentials = page.locator("button[title='Add Credentials']");
+        refreshToken = page.locator("input[name='SX_INBOUND']");
+        applicationId = page.locator("input[name='APPLICATION_ID']");
+        clientId = page.locator("input[name='TENANT_ID']");
+        secretKey = page.locator("input[name='SECRET_KEY']");
+        objectId = page.locator("input[name='OBJECT_ID']");
+        displayName = page.locator("input[name='DISPLAY_NAME']");
+        saveCredentials = page.locator("text=Save");
     }
 
     public static void loadInstanceData(String instanceName) {
@@ -161,28 +179,26 @@ public class EmailToTicketTestPage {
         if (instanceData == null || instanceData.isEmpty()) {
             throw new IllegalStateException("Instance data is not loaded. Call loadInstanceData() first.");
         }
-        editCredentials.click();
-        Locator rows = page.locator("tbody tr");  // page is already available in the class
-        int rowCount = rows.count();
+        page.waitForLoadState(LoadState.LOAD);
+        // Click on Add or Edit button
+        (addCredentials.count() > 0 ? addCredentials : editCredentials).click();
+        page.waitForLoadState(LoadState.LOAD);
 
-        for (int i = 0; i < rowCount; i++) {
-            String keyUI = rows.nth(i).locator("td").nth(0).innerText().trim();
-            String actualValue = rows.nth(i).locator("td").nth(1).innerText().trim();
+        // Fill common credentials
+        applicationId.fill(instanceData.get("application_Id"));
+        clientId.fill(instanceData.get("tenant_id"));
+        secretKey.fill(instanceData.get("secret_key"));
 
-            if (instanceData.containsKey(keyUI)) {
-                String expectedValue = instanceData.get(keyUI);
-
-                if (StringUtil.isBlank(actualValue)) {
-                    page.fill("input[name='SX_INBOUND']", expectedValue);
-                    System.out.println("✅ " + keyUI + ": MATCHED - " + actualValue);
-                } else {
-                    page.fill("input[name='SX_INBOUND']", "");
-                    page.fill("input[name='SX_INBOUND']", expectedValue);
-                    System.out.println("❌ " + keyUI + ": MISMATCHED - Expected: " + expectedValue + ", Found: " + actualValue);
-                }
-            } else {
-                System.out.println("⚠️ " + keyUI + ": Not found in Excel data");
+        // Fill vendor-specific fields
+        switch (vendor.toLowerCase()) {
+            case "outlook" -> {
+                objectId.fill(instanceData.get("object_id"));
+                displayName.fill(instanceData.get("display_name"));
             }
+            case "gmail" -> refreshToken.fill(instanceData.get("sx_inbound"));
+            default -> throw new IllegalArgumentException("Unsupported vendor: " + vendor);
         }
+
+        saveCredentials.click();
     }
 }

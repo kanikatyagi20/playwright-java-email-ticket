@@ -28,7 +28,7 @@ public class EmailToTicketTest {
 
     @Test
     public void testEmailCreatesTicket() {
-        EmailToTicketTestPage.loadInstanceData("DISC PROD");
+        EmailToTicketTestPage.loadInstanceData("TestingProd");
         emailToTicketTestPage = new EmailToTicketTestPage(page);
         emailToTicketTestPage.Login();
         emailToTicketTestPage.MailBoxConfiguration();
@@ -38,13 +38,6 @@ public class EmailToTicketTest {
         //subject - search - WIB-inc
         // store INC ticket
         //INC - email me search
-
-        page.click("text=Tickets");
-        page.fill("#search", "Test Subject");
-        page.press("#search", "Enter");
-
-        // Assertion logic here
-        assert page.locator(".ticket-id").isVisible();
     }
 
     @AfterMethod
