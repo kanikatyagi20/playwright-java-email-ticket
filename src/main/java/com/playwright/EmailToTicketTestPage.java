@@ -39,6 +39,7 @@ public class EmailToTicketTestPage {
     private Locator mailboxSaveButton;
     private Locator editCredentials;
     private Locator noRecordsText;
+    private Locator popUpText;
 
     public EmailToTicketTestPage(Page page) {
         this.page = page;
@@ -70,6 +71,7 @@ public class EmailToTicketTestPage {
         mailboxPasswordInput = page.locator("#password");
         mailboxSaveButton = page.locator("text=Save");
         editCredentials = page.locator("button[title='Edit']");
+        popUpText = page.locator("h2[class='swal2-title']");
     }
 
     public static void loadInstanceData(String instanceName) {
@@ -104,6 +106,18 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
     }
 
+    public void searchMailbox(String expectedMailbox) {
+        searchInput.fill(expectedMailbox);
+
+        if (noRecordsText.count() > 0) {
+            mailboxConfigCreateButton.waitFor();
+            mailboxConfigCreateButton.click();
+        } else {
+            mailboxRow0.click();
+            mailboxEditButton.click();
+        }
+    }
+
     public void MailBoxConfiguration() {
         if (instanceData == null) throw new IllegalStateException("Instance data not loaded.");
 
@@ -118,15 +132,8 @@ public class EmailToTicketTestPage {
         page.click("text=Mailbox Configuration");
         page.waitForLoadState(LoadState.LOAD);
 
-        searchInput.fill(expectedMailbox);
+        searchMailbox(expectedMailbox);
 
-        if (noRecordsText.count() > 0) {
-            mailboxConfigCreateButton.waitFor();
-            mailboxConfigCreateButton.click();
-        } else {
-            mailboxRow0.click();
-            mailboxEditButton.click();
-        }
         companyInput.fill(company);
         page.click("a[id='-item-0']");
         mailboxInput.fill(expectedMailbox);
@@ -135,14 +142,22 @@ public class EmailToTicketTestPage {
         statusDropdown.selectOption(status);
 
         saveButton.click();
+
+        String popUpMessage = popUpText.innerText().trim();
         okButton.click();
 
-        searchInput.fill(expectedMailbox);
-        mailboxRow0.click();
-        mailboxEditButton.click();
+        switch (popUpMessage) {
+            case "No changes detected in the provided payload" -> addEditCredentials(vendor);
+            case "Record saved successfully" -> {
+                searchMailbox(expectedMailbox);
+                addEditCredentials(vendor);
+            }
+            case "Mailbox already exists for a different company" ->
+                    System.out.println("✅ Mailbox configuration exist for different company.. provide correct info");
+        }
     }
 
-    public void addCredentials() {
+    public void addEditCredentials(String vendor) {
         if (instanceData == null || instanceData.isEmpty()) {
             throw new IllegalStateException("Instance data is not loaded. Call loadInstanceData() first.");
         }

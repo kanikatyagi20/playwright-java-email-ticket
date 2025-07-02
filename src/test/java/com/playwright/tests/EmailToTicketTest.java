@@ -32,7 +32,6 @@ public class EmailToTicketTest {
         emailToTicketTestPage = new EmailToTicketTestPage(page);
         emailToTicketTestPage.Login();
         emailToTicketTestPage.MailBoxConfiguration();
-        emailToTicketTestPage.addCredentials();
         //add credtion
         // email sender
         //store subject
