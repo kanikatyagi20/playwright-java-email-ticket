@@ -42,6 +42,22 @@ public class EmailToTicketTestPage {
     private Locator saveCredentials;
     private Locator applicationMenuSearch;
     private Locator mailBoxConfigurationMenu;
+    private Locator mailboxActions;
+    private Locator mailToTicketTab;
+    private Locator surveyTab;
+    private Locator approvalTab;
+    private Locator mailboxDropdown;
+    private Locator serviceInput;
+    private Locator whiteListedDomains;
+
+    private Locator alwaysException;
+    private Locator neverException;
+    private Locator impact;
+    private Locator urgency;
+    private Locator userVerificationType;
+    private Locator selectGuestUser;
+    private Locator searchedCompanySelect;
+    private Locator guestUserSelect;
 
     public EmailToTicketTestPage(Page page) {
         this.page = page;
@@ -79,6 +95,21 @@ public class EmailToTicketTestPage {
         saveCredentials = page.locator("text=Save");
         applicationMenuSearch = page.locator(".form-control");
         mailBoxConfigurationMenu = page.locator("text=Mailbox Configuration");
+        mailboxActions = page.locator("a[title='Mailbox Actions'][href='/systemConfig']");
+        mailToTicketTab = page.locator("button[title='Mail to Ticket']");
+        surveyTab = page.locator("button[title='Survey']");
+        approvalTab = page.locator("button[title='Approval']");
+        mailboxDropdown = page.locator("select[name='MAILBOX_ID']");
+        serviceInput = page.locator("input[placeholder='Enter Service Name']");
+        whiteListedDomains = page.locator("input[name='WHITELISTED_DOMAINS']");
+        alwaysException = page.locator("input[name='ALWAYS_EXCEPTION']");
+        neverException = page.locator("input[name='NEVER_EXCEPTION']");
+        impact = page.locator("select[name='impact']");
+        urgency = page.locator("select[name='urgency']");
+        userVerificationType = page.locator("select[name='ACTIONS']");
+        selectGuestUser = page.locator("input[placeholder='User Name']");
+        searchedCompanySelect = page.locator("a[id='-item-0']");
+        guestUserSelect = page.locator("li[id='react-autowhatever-1--item-0']");
     }
 
     public static void loadInstanceData(String instanceName) {
@@ -114,7 +145,7 @@ public class EmailToTicketTestPage {
 
     public void navigateToMailboxConfiguration() {
         appMenuButton.click();
-        applicationMenuSearch.fill("Mailbox");
+        applicationMenuSearch.fill(InstanceConfigKeys.MailBox_CONFIGURATION.getValue());
         mailBoxConfigurationMenu.click();
         page.waitForLoadState(LoadState.LOAD);
     }
@@ -142,7 +173,7 @@ public class EmailToTicketTestPage {
         navigateToMailboxConfiguration();
         searchMailbox(expectedMailbox);
         companyInput.fill(company);
-        page.click("a[id='-item-0']");
+        searchedCompanySelect.click();
         mailboxInput.fill(expectedMailbox);
         providerDropdown.selectOption(vendor);
         authTypeDropdown.selectOption(authType);

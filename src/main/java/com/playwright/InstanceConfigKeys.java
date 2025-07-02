@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum InstanceConfigKeys {
+    MailBox_CONFIGURATION("Mailbox Configuration"),
 
     INSTANCE_NAME("instanceName"),
     URL("url"),
