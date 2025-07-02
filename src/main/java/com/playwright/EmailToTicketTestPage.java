@@ -326,8 +326,7 @@ public class EmailToTicketTestPage {
             summarySearchBox.fill("");
             summarySearchBox.fill(subject);
             searchIcon.click();
-            page.waitForLoadState(LoadState.LOAD);
-
+            page.waitForTimeout(7000);
             if (incidentFirstRow.count() > 0) {
                 incidentFirstRow.first().click();
                 page.waitForLoadState(LoadState.LOAD);
