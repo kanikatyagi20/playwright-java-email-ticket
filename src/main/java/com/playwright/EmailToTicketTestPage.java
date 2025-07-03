@@ -7,9 +7,7 @@ import com.playwright.utils.EmailReader;
 import com.playwright.utils.EmailSender;
 import com.playwright.utils.ExcelReader;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class EmailToTicketTestPage {
     private final Page page;
@@ -73,6 +71,17 @@ public class EmailToTicketTestPage {
     private Locator globalSearchIcon;
     private Locator issueDescription;
     private Locator additionalInformation;
+    private Locator ticketCompany;
+    private Locator ticketConsumer;
+    private Locator ticketOffering;
+    private Locator ticketUrgency;
+    private Locator ticketImpact;
+    private Locator reportedThrough;
+    private Locator attachmentLink;
+    private Locator watcherLink;
+    private Locator attachmentNameTable;
+    private Locator watcherDetails;
+
 
     public EmailToTicketTestPage(Page page) {
         this.page = page;
@@ -137,6 +146,17 @@ public class EmailToTicketTestPage {
         globalSearchIcon = page.locator("a[title='Search']");
         issueDescription = page.locator("textarea[name='issueDescription']");
         additionalInformation = page.locator("div[class='ql-editor']");
+        ticketCompany = page.locator("input[name='companyName']");
+        ticketConsumer = page.locator("//label[contains(text(), 'Consumer')]/following::input[1]");
+        ticketOffering = page.locator("//label[contains(text(), 'Which Service is impacted?')]/following::input[1]");
+        ticketUrgency = page.locator("select[name='urgencyMode']");
+        ticketImpact = page.locator("select[name='criticality']");
+        reportedThrough = page.locator("select[name='reportedThrough']");
+        attachmentLink = page.locator("li[title='Attachment']");
+        watcherLink = page.locator("li[title='Watcher Details']");
+        attachmentNameTable = page.locator("//table[contains(@class, 'wrpAttTab')]//tbody/tr/td[1]/div[1]");
+        watcherDetails = page.locator("//table[contains(@class, 'table-hover')]//tbody/tr/td[1]");
+
 
     }
 
@@ -389,10 +409,46 @@ public class EmailToTicketTestPage {
         return Collections.emptyList(); // Or return null if you prefer
     }
 
-    public void validateTicketDetails(String ticketNumber) {
+    public Map<String, String> getAllTicketDetails(String ticketNumber) {
+        // Perform search
         searchIncidentFromGlobalSearch(ticketNumber);
-        issueDescription.innerText();
-        additionalInformation.innerText();
 
+        // Fetch details (assuming these return text content)
+        String issueDesc = issueDescription.innerText();
+        String additionalInfo = additionalInformation.innerText();
+
+        // Store in map
+        Map<String, String> ticketDetails = new HashMap<>();
+        ticketDetails.put("Ticket Number", ticketNumber);
+        ticketDetails.put("Issue Description", issueDesc);
+        ticketDetails.put("Additional Information", additionalInfo);
+        return ticketDetails;
+    }
+
+    public String getAllAttachedFiles() {
+        attachmentLink.click();
+        page.waitForLoadState(LoadState.LOAD);
+        List<String> attachmentNames = new ArrayList<>();
+        int count = attachmentNameTable.count();
+        for (int i = 0; i < count; i++) {
+            String name = attachmentNameTable.nth(i).innerText().trim();
+            attachmentNames.add(name);
+        }
+        String allAttachments = String.join(", ", attachmentNames);
+        return allAttachments;
+    }
+
+    public String getAllWatcherDetails(Page page) {
+        watcherLink.click();
+        page.waitForLoadState(LoadState.LOAD);
+        List<String> watcheres = new ArrayList<>();
+        int count = watcherDetails.count();
+        for (int i = 0; i < count; i++) {
+            String watcher = watcherDetails.nth(i).innerText().trim();
+            if (!watcher.isEmpty()) {
+                watcheres.add(watcher);
+            }
+        }
+        return String.join(", ", watcheres);
     }
 }

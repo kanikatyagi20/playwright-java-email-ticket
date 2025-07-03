@@ -30,7 +30,18 @@ public enum InstanceConfigKeys {
     USER_VERIFICATION_TYPE("userVerificationType"),
     GUEST_USER_EMAIL("guestUserEmail"),
     GUEST_USER_NAME("guestUserName"),
-    ACTION_STATUS("actionStatus");
+    ACTION_STATUS("actionStatus"),
+    SUMMARY("summary"),
+    DESCRIPTION("description"),
+    WATCHERDETAILS("watcherDetails"),
+    ATTACHMENT_NAME("attachmentName"),
+    TICKET_OFFERING("ticketOfferingName"),
+    COSNUMER_NAME("consumerName"),
+    TICKET_COMPANY_NAME("ticketCompanyName"),
+    TICKET_URGENCY("ticketUrgency"),
+    TICKET_IMPACT("ticketImpact"),
+    REPORTING_THROUGH("reportingThough"),
+    TICKET_STATUS("ticketStatus");
 
     private final String value;
 

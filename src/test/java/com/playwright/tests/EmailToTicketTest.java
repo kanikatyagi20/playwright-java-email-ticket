@@ -1,14 +1,9 @@
 package com.playwright.tests;
 
 import com.microsoft.playwright.*;
-import com.microsoft.playwright.options.LoadState;
-import com.microsoft.playwright.options.WaitForSelectorState;
 import com.playwright.EmailToTicketTestPage;
-import com.playwright.utils.ConfigReader;
-import com.playwright.utils.EmailSender;
 import org.testng.annotations.*;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
