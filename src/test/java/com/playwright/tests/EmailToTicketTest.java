@@ -1,9 +1,12 @@
 package com.playwright.tests;
 
+import com.aventstack.extentreports.ExtentTest;
 import com.microsoft.playwright.*;
 import com.playwright.EmailToTicketTestPage;
+import com.playwright.utils.ExtentReportManager;
 import org.testng.annotations.*;
 
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -42,7 +45,7 @@ public class EmailToTicketTest {
         String subjectForEmail = "Testing Ticket - " + randomId + timestamp;
         String emailBody = "Test description for ticket: " + randomId + " at " + timestamp;
         String attachmentPath = "src/test/resources/JIRA.png";
-        String ticketNumber = emailToTicketTestPage.sentEmailAndGetTicketNumber(subjectForEmail, emailBody,attachmentPath);
+        String ticketNumber = emailToTicketTestPage.sentEmailAndGetTicketNumber(subjectForEmail, emailBody, attachmentPath);
         String[] parts = ticketNumber.split("\n");
         String[] ticketParts = parts[0].split("-");
         String reqNumber = ticketParts[0];
@@ -57,6 +60,34 @@ public class EmailToTicketTest {
         System.out.println("Subject: " + mailReceived.get(0).get("subject"));
         System.out.println("Sent Date: " + mailReceived.get(0).get("sentDate"));
         System.out.println("Content: " + mailReceived.get(0).get("content"));
+    }
+
+    @Test
+    public void t1() {
+        ExtentReportManager.initReport();
+        emailToTicketTestPage = new EmailToTicketTestPage(page);
+        ExtentTest test = ExtentReportManager.createTest("Validate Ticket Details");
+        EmailToTicketTestPage.loadInstanceData("TestingProd");
+        test.info("Loaded instance data for 'TestingProd'");
+        emailToTicketTestPage.login();
+        test.pass("Login successful");
+        Map<String, String> details = emailToTicketTestPage.getAllTicketDetails("INC000000011380");
+        test.info("Fetched ticket details for INC000000011380");
+        // Log details to report
+        details.forEach((key, value) -> {
+            test.info(key + ": " + value);
+        });
+        // Optionally attach a screenshot
+        String screenshotPath = "test-output/screenshots/ticketDetails.png";
+        page.screenshot(new Page.ScreenshotOptions().setPath(Paths.get(screenshotPath)));
+        test.addScreenCaptureFromPath(screenshotPath);
+
+        test.pass("Ticket details validated and screenshot captured.");
+        System.out.println("OK");
+        browser.close();
+        test.info("Browser closed");
+        ExtentReportManager.flushReport();
+
     }
 
     @AfterMethod

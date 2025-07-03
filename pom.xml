@@ -36,13 +36,22 @@
             <version>2.0.1</version>
         </dependency>
 
-            <!-- Apache POI for XLSX files -->
-            <dependency>
-                <groupId>org.apache.poi</groupId>
-                <artifactId>poi-ooxml</artifactId>
-                <version>5.2.5</version> <!-- latest as of mid-2024 -->
-            </dependency>
-        </dependencies>
+        <!-- Apache POI for XLSX files -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version> <!-- latest as of mid-2024 -->
+        </dependency>
+
+        <!-- ExtentReports -->
+        <dependency>
+            <groupId>com.aventstack</groupId>
+            <artifactId>extentreports</artifactId>
+            <version>5.1.1</version>
+        </dependency>
+
+    </dependencies>
+
 
     <build>
         <plugins>

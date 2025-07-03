@@ -70,7 +70,7 @@ public class EmailToTicketTestPage {
     private Locator globalSearchBar;
     private Locator globalSearchIcon;
     private Locator issueDescription;
-    private Locator additionalInformation;
+    private Locator issueSummary;
     private Locator ticketCompany;
     private Locator ticketConsumer;
     private Locator ticketOffering;
@@ -81,6 +81,7 @@ public class EmailToTicketTestPage {
     private Locator watcherLink;
     private Locator attachmentNameTable;
     private Locator watcherDetails;
+    private Locator ticketStatus;
 
 
     public EmailToTicketTestPage(Page page) {
@@ -144,8 +145,8 @@ public class EmailToTicketTestPage {
         ticketNumber = page.locator("div[class='rPageHeading']");
         globalSearchBar = page.locator("input[placeholder='Search here...']");
         globalSearchIcon = page.locator("a[title='Search']");
-        issueDescription = page.locator("textarea[name='issueDescription']");
-        additionalInformation = page.locator("div[class='ql-editor']");
+        issueSummary = page.locator("textarea[name='issueDescription']");
+        issueDescription = page.locator("div[class='ql-editor']");
         ticketCompany = page.locator("input[name='companyName']");
         ticketConsumer = page.locator("//label[contains(text(), 'Consumer')]/following::input[1]");
         ticketOffering = page.locator("//label[contains(text(), 'Which Service is impacted?')]/following::input[1]");
@@ -156,7 +157,7 @@ public class EmailToTicketTestPage {
         watcherLink = page.locator("li[title='Watcher Details']");
         attachmentNameTable = page.locator("//table[contains(@class, 'wrpAttTab')]//tbody/tr/td[1]/div[1]");
         watcherDetails = page.locator("//table[contains(@class, 'table-hover')]//tbody/tr/td[1]");
-
+        ticketStatus = page.locator("button[title='Statuses']");
 
     }
 
@@ -216,17 +217,18 @@ public class EmailToTicketTestPage {
     public void searchIncidentFromGlobalSearch(String ticketNumber) {
         appMenuButton.click();
         page.waitForLoadState(LoadState.LOAD);
+
         applicationMenuSearch.fill(InstanceConfigKeys.Work_Item_Board.getValue());
         page.waitForLoadState(LoadState.LOAD);
+
         workItemBoard.click();
         page.waitForLoadState(LoadState.LOAD);
 
         globalSearchBar.fill(ticketNumber);
-        Page newTab = page.waitForPopup(() -> {
-            globalSearchIcon.click();
-        });
+
+        Page newTab = page.waitForPopup(() -> globalSearchIcon.click());
+
         newTab.waitForLoadState(LoadState.LOAD);
-        page.close();
         newTab.bringToFront();
     }
 
@@ -402,26 +404,40 @@ public class EmailToTicketTestPage {
             try {
                 Thread.sleep(interval);
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // Restore interrupted status
+                Thread.currentThread().interrupt();
                 throw new RuntimeException("Thread was interrupted during sleep", e);
             }
         }
-        return Collections.emptyList(); // Or return null if you prefer
+        return Collections.emptyList();
     }
 
     public Map<String, String> getAllTicketDetails(String ticketNumber) {
-        // Perform search
         searchIncidentFromGlobalSearch(ticketNumber);
 
-        // Fetch details (assuming these return text content)
-        String issueDesc = issueDescription.innerText();
-        String additionalInfo = additionalInformation.innerText();
+        String summary = issueSummary.innerText().trim();
+        String additionalInfo = issueDescription.innerText().trim();
+        String company = ticketCompany.inputValue();
+        String consumer = ticketConsumer.getAttribute("placeholder");
+        String offering = ticketOffering.inputValue();
+        String urgency = ticketUrgency.locator("option:checked").textContent();
+        String impact = ticketImpact.locator("option:checked").textContent();
+        String through = reportedThrough.locator("option:checked").textContent();
+        String status = ticketStatus.innerText().trim();
+        String watcherDetailsText = getAllWatcherDetails();
+        String attachmentDetails = getAllAttachedFiles();
 
-        // Store in map
         Map<String, String> ticketDetails = new HashMap<>();
-        ticketDetails.put("Ticket Number", ticketNumber);
-        ticketDetails.put("Issue Description", issueDesc);
-        ticketDetails.put("Additional Information", additionalInfo);
+        ticketDetails.put(InstanceConfigKeys.SUMMARY.getValue(), summary);
+        ticketDetails.put(InstanceConfigKeys.DESCRIPTION.getValue(), additionalInfo);
+        ticketDetails.put(InstanceConfigKeys.TICKET_COMPANY_NAME.getValue(), company);
+        ticketDetails.put(InstanceConfigKeys.COSNUMER_NAME.getValue(), consumer);
+        ticketDetails.put(InstanceConfigKeys.TICKET_OFFERING.getValue(), offering);
+        ticketDetails.put(InstanceConfigKeys.TICKET_URGENCY.getValue(), urgency);
+        ticketDetails.put(InstanceConfigKeys.TICKET_IMPACT.getValue(), impact);
+        ticketDetails.put(InstanceConfigKeys.REPORTING_THROUGH.getValue(), through);
+        ticketDetails.put(InstanceConfigKeys.TICKET_STATUS.getValue(), status);
+        ticketDetails.put(InstanceConfigKeys.WATCHERDETAILS.getValue(), watcherDetailsText);
+        ticketDetails.put(InstanceConfigKeys.ATTACHMENT_NAME.getValue(), attachmentDetails);
         return ticketDetails;
     }
 
@@ -438,7 +454,7 @@ public class EmailToTicketTestPage {
         return allAttachments;
     }
 
-    public String getAllWatcherDetails(Page page) {
+    public String getAllWatcherDetails() {
         watcherLink.click();
         page.waitForLoadState(LoadState.LOAD);
         List<String> watcheres = new ArrayList<>();
