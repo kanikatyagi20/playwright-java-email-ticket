@@ -338,8 +338,9 @@ public class EmailToTicketTestPage {
 
     }
 
-    public String sentEmailAndGetTicketNumber(String subject, String body) {
-        EmailSender.sendEmail(instanceData.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue()), subject, body);
+    public String sentEmailAndGetTicketNumber(String subject, String body, String attachment) {
+
+        EmailSender.sendEmail(instanceData.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue()), subject, body, attachment);
         navigateToIncidentListPage();
 
         long startTime = System.currentTimeMillis();

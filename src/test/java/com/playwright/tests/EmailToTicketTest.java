@@ -46,8 +46,8 @@ public class EmailToTicketTest {
 
         String subjectForEmail = "Testing Ticket - " + randomId + timestamp;
         String emailBody = "Test description for ticket: " + randomId + " at " + timestamp;
-
-        String ticketNumber = emailToTicketTestPage.sentEmailAndGetTicketNumber(subjectForEmail, emailBody);
+        String attachmentPath = "src/test/resources/JIRA.png";
+        String ticketNumber = emailToTicketTestPage.sentEmailAndGetTicketNumber(subjectForEmail, emailBody,attachmentPath);
         String[] parts = ticketNumber.split("\n");
         String[] ticketParts = parts[0].split("-");
         String reqNumber = ticketParts[0];
