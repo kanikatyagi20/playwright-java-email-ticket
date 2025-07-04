@@ -9,7 +9,7 @@ public class EmailReader {
 
     public static List<Map<String, String>> readEmailBySubject(String targetSubject) {
         final String username = "xsm432@gmail.com";
-        final String password = "ameiumexjbsmidta";
+        final String password = "ameiumexjbsmidta"; // 🔐 Consider using environment variables or secrets management
 
         List<Map<String, String>> emailList = new ArrayList<>();
 
@@ -64,29 +64,30 @@ public class EmailReader {
     }
 
     private static String getTextFromMessage(Message message) throws Exception {
-        Object content = message.getContent();
-        if (content instanceof String) {
-            return (String) content;
-        } else if (content instanceof Multipart) {
-            Multipart multipart = (Multipart) content;
-            for (int i = 0; i < multipart.getCount(); i++) {
-                BodyPart part = multipart.getBodyPart(i);
-                if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) continue;
-
-                if (part.isMimeType("text/plain")) {
-                    return (String) part.getContent();
-                } else if (part.isMimeType("text/html")) {
-                    return (String) part.getContent(); // optionally strip HTML
-                }
-            }
-        }
-        return "⚠️ Unable to extract content.";
+        StringBuilder result = new StringBuilder();
+        extractParts(message, result);
+        return result.toString().trim();
     }
 
-    // For Verification
+    private static void extractParts(Part part, StringBuilder result) throws Exception {
+        if (part.isMimeType("text/plain")) {
+            result.append(part.getContent().toString()).append("\n");
+        } else if (part.isMimeType("text/html")) {
+            String html = (String) part.getContent();
+            result.append(html).append("\n"); // Or strip HTML using Jsoup if needed
+        } else if (part.isMimeType("multipart/*")) {
+            Multipart multipart = (Multipart) part.getContent();
+            for (int i = 0; i < multipart.getCount(); i++) {
+                extractParts(multipart.getBodyPart(i), result);
+            }
+        }
+    }
+
+    // For testing
     public static void main(String[] args) {
         String subject = "Incident REQ000002925012 / INC000002561169 has been logged";
         List<Map<String, String>> emails = readEmailBySubject(subject);
-        System.out.println("To: " + emails.get(0).get("to"));
+        String watermark = HTMLUtils.extractWatermark(emails.get(0).get("content"));
+        System.out.println("🆔 Extracted Watermark: " + watermark);
     }
 }

@@ -419,7 +419,7 @@ public class EmailToTicketTestPage {
         return Collections.emptyList();
     }
 
-    public Map<String, String> subjectAndBodyGenerator(String mailAction, String reqNumber, String itemId, int rating, String approvalAction, String waterMarkId) {
+    public static Map<String, String> subjectAndBodyGenerator(String mailAction, String reqNumber, String itemId, Integer rating, String approvalAction, String waterMarkId) {
         Map<String, String> subjectAndBody = new HashMap<>();
         String subject;
         String body;

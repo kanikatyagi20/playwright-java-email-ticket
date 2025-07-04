@@ -1,17 +1,12 @@
 package com.playwright.tests;
 
-import com.aventstack.extentreports.ExtentTest;
 import com.microsoft.playwright.*;
 import com.playwright.EmailToTicketTestPage;
-import com.playwright.utils.ExtentReportManager;
 import org.testng.annotations.*;
 
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+
 
 
 public class EmailToTicketTest {
@@ -37,13 +32,11 @@ public class EmailToTicketTest {
         emailToTicketTestPage.login();
         emailToTicketTestPage.emailToTicketConfiguration();
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-        String timestamp = LocalDateTime.now().format(formatter);
+        Map<String, String> mailToSent = EmailToTicketTestPage.subjectAndBodyGenerator("incident",null,null,null,null,null );
 
-        String randomId = UUID.randomUUID().toString().substring(0, 20);
 
-        String subjectForEmail = "Testing Ticket - " + randomId + timestamp;
-        String emailBody = "Test description for ticket: " + randomId + " at " + timestamp;
+        String subjectForEmail = mailToSent.get("subject");
+        String emailBody = mailToSent.get("body");
         String attachmentPath = "src/test/resources/JIRA.png";
         String ticketNumber = emailToTicketTestPage.sentEmailAndGetTicketNumber(subjectForEmail, emailBody, attachmentPath);
         String[] parts = ticketNumber.split("\n");
