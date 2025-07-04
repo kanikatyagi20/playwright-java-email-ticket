@@ -68,7 +68,7 @@ public class EmailToTicketTest {
         EmailToTicketTestPage.loadInstanceData("TestingProd");
         emailToTicketTestPage.login();
         Map<String, String> details = emailToTicketTestPage.getAllTicketDetails("INC000000011380");
-
+        System.out.println("OK");
 
     }
 

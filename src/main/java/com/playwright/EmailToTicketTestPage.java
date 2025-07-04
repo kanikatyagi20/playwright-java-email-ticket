@@ -421,11 +421,11 @@ public class EmailToTicketTestPage {
     public Map<String, String> getAllTicketDetails(String ticketNumber) {
         searchAndEditIncidentTicket(ticketNumber);
 
-        String summary = issueSummary.innerText().trim();
+        String summary = issueSummary.inputValue();
         String additionalInfo = issueDescription.innerText().trim();
         String company = ticketCompany.inputValue();
         String consumer = ticketConsumer.getAttribute("placeholder");
-        String offering = ticketOffering.inputValue();
+        String offering = ticketOffering.getAttribute("placeholder");
         String urgency = ticketUrgency.locator("option:checked").textContent();
         String impact = ticketImpact.locator("option:checked").textContent();
         String through = reportedThrough.locator("option:checked").textContent();
@@ -450,10 +450,10 @@ public class EmailToTicketTestPage {
 
     public String getAllAttachedFiles() {
         attachmentLink.click();
-        page.waitForLoadState(LoadState.LOAD);
+        page.waitForTimeout(5000);
         List<String> attachmentNames = new ArrayList<>();
         int count = attachmentNameTable.count();
-        for (int i = 0; i < count; i++) {
+        for (int i = 1; i < count; i++) {
             String name = attachmentNameTable.nth(i).innerText().trim();
             attachmentNames.add(name);
         }
@@ -463,10 +463,10 @@ public class EmailToTicketTestPage {
 
     public String getAllWatcherDetails() {
         watcherLink.click();
-        page.waitForLoadState(LoadState.LOAD);
+        page.waitForTimeout(5000);
         List<String> watcheres = new ArrayList<>();
         int count = watcherDetails.count();
-        for (int i = 0; i < count; i++) {
+        for (int i = 1; i < count; i++) {
             String watcher = watcherDetails.nth(i).innerText().trim();
             if (!watcher.isEmpty()) {
                 watcheres.add(watcher);
