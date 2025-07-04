@@ -7,6 +7,8 @@ import com.playwright.utils.EmailReader;
 import com.playwright.utils.EmailSender;
 import com.playwright.utils.ExcelReader;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class EmailToTicketTestPage {
@@ -415,6 +417,40 @@ public class EmailToTicketTestPage {
             }
         }
         return Collections.emptyList();
+    }
+
+    public Map<String, String> subjectAndBodyGenerator(String mailAction, String reqNumber, String itemId, int rating, String approvalAction, String waterMarkId) {
+        Map<String, String> subjectAndBody = new HashMap<>();
+        String subject;
+        String body;
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String timestamp = LocalDateTime.now().format(formatter);
+        String randomId = UUID.randomUUID().toString().substring(0, 20);
+
+        String comment = "Comment for " + mailAction + "  " + randomId + "  " + timestamp;
+
+        switch (mailAction.toLowerCase()) {
+            case "survey":
+                subject = String.format("Feedback Rating #%d: Service Request: Feedback %s / %s", rating, reqNumber, itemId);
+                body = String.format("Rating: %d star\n\nFeedback Comment: %s\n\nRef: %s\n\nId: %s", rating, comment, itemId, waterMarkId);
+                break;
+
+            case "approval":
+                subject = String.format("%s-%s", approvalAction, itemId);
+                body = String.format(
+                        "%s\n\nId: %s", comment, waterMarkId);
+                break;
+
+            case "incident":
+            default:
+                subject = "Testing Ticket - " + randomId + " " + timestamp;
+                body = "Test description for ticket: " + randomId + " at " + timestamp;
+                break;
+        }
+        subjectAndBody.put("subject", subject);
+        subjectAndBody.put("body", body);
+        return subjectAndBody;
     }
 
     //Incident Ticket Methods
