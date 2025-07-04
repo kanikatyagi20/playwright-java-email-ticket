@@ -82,6 +82,9 @@ public class EmailToTicketTestPage {
     private Locator attachmentNameTable;
     private Locator watcherDetails;
     private Locator ticketStatus;
+    private Locator workItemIdSearchBox;
+    private Locator editIncidentBtn;
+    private Locator incidentBreadCrumbs;
 
 
     public EmailToTicketTestPage(Page page) {
@@ -140,6 +143,7 @@ public class EmailToTicketTestPage {
         incidentTab = page.locator("a[title=Incident]");
         allButton = page.locator("button[title=All]");
         summarySearchBox = page.locator("//th[div[text()='Summary']]//input[@placeholder='Search here']");
+        workItemIdSearchBox = page.locator("//th[div[text()='Work Item ID']]//input[@placeholder='Search here']");
         searchIcon = page.locator("a[title='search']");
         incidentFirstRow = page.locator("td[class='deskReqNum']");
         ticketNumber = page.locator("div[class='rPageHeading']");
@@ -158,6 +162,8 @@ public class EmailToTicketTestPage {
         attachmentNameTable = page.locator("//table[contains(@class, 'wrpAttTab')]//tbody/tr/td[1]/div[1]");
         watcherDetails = page.locator("//table[contains(@class, 'table-hover')]//tbody/tr/td[1]");
         ticketStatus = page.locator("button[title='Statuses']");
+        editIncidentBtn = page.locator("a[title='Edit']");
+        incidentBreadCrumbs = page.locator("div[class='lnk']");
 
     }
 
@@ -169,6 +175,7 @@ public class EmailToTicketTestPage {
         instanceData = rows.get(0);
     }
 
+    //Login method
     public void login() {
         if (instanceData == null) throw new IllegalStateException("Instance data not loaded.");
         String url = instanceData.get(InstanceConfigKeys.URL.getValue());
@@ -192,6 +199,8 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
     }
 
+    //Navigating method starts
+
     public void navigateToMailboxConfiguration() {
         appMenuButton.click();
         page.waitForLoadState(LoadState.LOAD);
@@ -214,24 +223,20 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
     }
 
-    public void searchIncidentFromGlobalSearch(String ticketNumber) {
-        appMenuButton.click();
+    public boolean searchAndEditIncidentTicket(String ticketNumber) {
+        navigateToIncidentListPage();
+        workItemIdSearchBox.fill(ticketNumber);
+        searchIcon.click();
         page.waitForLoadState(LoadState.LOAD);
-
-        applicationMenuSearch.fill(InstanceConfigKeys.Work_Item_Board.getValue());
+        incidentFirstRow.click();
         page.waitForLoadState(LoadState.LOAD);
-
-        workItemBoard.click();
-        page.waitForLoadState(LoadState.LOAD);
-
-        globalSearchBar.fill(ticketNumber);
-
-        Page newTab = page.waitForPopup(() -> globalSearchIcon.click());
-
-        newTab.waitForLoadState(LoadState.LOAD);
-        newTab.bringToFront();
+        editIncidentBtn.click();
+        incidentBreadCrumbs.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        incidentBreadCrumbs.innerText();
+        return incidentBreadCrumbs.innerText().contains(ticketNumber);
     }
 
+    //Mailbox Configuration
     public void searchMailbox(String expectedMailbox) {
         page.waitForLoadState(LoadState.LOAD);
         searchInput.fill(expectedMailbox);
@@ -360,6 +365,7 @@ public class EmailToTicketTestPage {
 
     }
 
+    //Email related Methods
     public String sentEmailAndGetTicketNumber(String subject, String body, String attachment) {
 
         EmailSender.sendEmail(instanceData.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue()), subject, body, attachment);
@@ -411,8 +417,9 @@ public class EmailToTicketTestPage {
         return Collections.emptyList();
     }
 
+    //Incident Ticket Methods
     public Map<String, String> getAllTicketDetails(String ticketNumber) {
-        searchIncidentFromGlobalSearch(ticketNumber);
+        searchAndEditIncidentTicket(ticketNumber);
 
         String summary = issueSummary.innerText().trim();
         String additionalInfo = issueDescription.innerText().trim();

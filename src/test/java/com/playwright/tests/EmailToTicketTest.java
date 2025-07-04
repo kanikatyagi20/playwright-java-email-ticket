@@ -64,29 +64,11 @@ public class EmailToTicketTest {
 
     @Test
     public void t1() {
-        ExtentReportManager.initReport();
         emailToTicketTestPage = new EmailToTicketTestPage(page);
-        ExtentTest test = ExtentReportManager.createTest("Validate Ticket Details");
         EmailToTicketTestPage.loadInstanceData("TestingProd");
-        test.info("Loaded instance data for 'TestingProd'");
         emailToTicketTestPage.login();
-        test.pass("Login successful");
         Map<String, String> details = emailToTicketTestPage.getAllTicketDetails("INC000000011380");
-        test.info("Fetched ticket details for INC000000011380");
-        // Log details to report
-        details.forEach((key, value) -> {
-            test.info(key + ": " + value);
-        });
-        // Optionally attach a screenshot
-        String screenshotPath = "test-output/screenshots/ticketDetails.png";
-        page.screenshot(new Page.ScreenshotOptions().setPath(Paths.get(screenshotPath)));
-        test.addScreenCaptureFromPath(screenshotPath);
 
-        test.pass("Ticket details validated and screenshot captured.");
-        System.out.println("OK");
-        browser.close();
-        test.info("Browser closed");
-        ExtentReportManager.flushReport();
 
     }
 
