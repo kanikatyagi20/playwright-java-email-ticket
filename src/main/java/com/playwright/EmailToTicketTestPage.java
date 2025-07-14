@@ -6,6 +6,7 @@ import com.microsoft.playwright.options.WaitForSelectorState;
 import com.playwright.utils.EmailReader;
 import com.playwright.utils.EmailSender;
 import com.playwright.utils.ExcelReader;
+import com.playwright.utils.ExtentReportManager;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -199,6 +200,7 @@ public class EmailToTicketTestPage {
         loginButton.click();
 
         page.waitForLoadState(LoadState.LOAD);
+        ExtentReportManager.getTest().pass("User is Login into the Application");
     }
 
     //Navigating method starts
@@ -210,6 +212,7 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
         mailBoxConfigurationMenu.click();
         page.waitForLoadState(LoadState.LOAD);
+        ExtentReportManager.getTest().pass("Navigated to Mailbox Configuration page");
     }
 
     public void navigateToIncidentListPage() {
@@ -223,6 +226,7 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
         allButton.click();
         page.waitForLoadState(LoadState.LOAD);
+        ExtentReportManager.getTest().pass("Navigated to Incident List page");
     }
 
     public boolean searchAndEditIncidentTicket(String ticketNumber) {
@@ -235,7 +239,13 @@ public class EmailToTicketTestPage {
         editIncidentBtn.click();
         incidentBreadCrumbs.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         incidentBreadCrumbs.innerText();
-        return incidentBreadCrumbs.innerText().contains(ticketNumber);
+        boolean result = incidentBreadCrumbs.innerText().contains(ticketNumber);
+        if (result) {
+            ExtentReportManager.getTest().pass("Incident Ticket " + ticketNumber + " is opened for editing");
+        } else {
+            ExtentReportManager.getTest().fail("Incident Ticket " + ticketNumber + " not found or could not be opened");
+        }
+        return result;
     }
 
     //Mailbox Configuration
@@ -245,11 +255,13 @@ public class EmailToTicketTestPage {
         if (noRecordsText.count() > 0) {
             createButton.waitFor();
             createButton.click();
+            ExtentReportManager.getTest().pass("No Mailbox found, creating new Mailbox: " + expectedMailbox);
         } else {
             page.waitForLoadState(LoadState.LOAD);
             mailboxRow0.click();
             editButton.waitFor();
             editButton.click();
+            ExtentReportManager.getTest().pass("Editing existing Mailbox: " + expectedMailbox);
         }
     }
 
@@ -281,7 +293,7 @@ public class EmailToTicketTestPage {
                 addEditCredentials(vendor);
             }
             case "Mailbox already exists for a different company" ->
-                    System.out.println("✅ Mailbox configuration exist for different company.. provide correct info");
+                    ExtentReportManager.getTest().fail("Mailbox already exists for a different company: " + expectedMailbox);
         }
     }
 
@@ -313,6 +325,7 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
         closeButton.click();
         page.waitForLoadState(LoadState.LOAD);
+        ExtentReportManager.getTest().pass("Credentials for " + vendor + " Mailbox are configured successfully");
     }
 
     public void emailToTicketConfiguration() {
@@ -361,6 +374,7 @@ public class EmailToTicketTestPage {
         saveButton.click();
         okButton.click();
         page.waitForLoadState(LoadState.LOAD);
+        ExtentReportManager.getTest().pass("Email to Ticket Configuration is done successfully for Mailbox: " + mailbox);
     }
 
     public void surveyApprovalConfiguation(String mailBoxAction) {
@@ -371,6 +385,8 @@ public class EmailToTicketTestPage {
     public String sentEmailAndGetTicketNumber(String subject, String body, String attachment) {
 
         EmailSender.sendEmail(instanceData.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue()), subject, body, attachment);
+        ExtentReportManager.getTest().pass("Email sent with subject: " + subject + " to mailbox: " + instanceData.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue()));
+
         navigateToIncidentListPage();
 
         long startTime = System.currentTimeMillis();
@@ -385,6 +401,7 @@ public class EmailToTicketTestPage {
             if (incidentFirstRow.count() > 0) {
                 incidentFirstRow.first().click();
                 page.waitForLoadState(LoadState.LOAD);
+                ExtentReportManager.getTest().pass("Incident Ticket found for subject: " + subject);
                 return ticketNumber.innerText().trim();
             }
 
@@ -395,7 +412,7 @@ public class EmailToTicketTestPage {
                 throw new RuntimeException("Thread was interrupted during sleep", e);
             }
         }
-
+        ExtentReportManager.getTest().fail("Incident Ticket not found for subject: " + subject + " within the timeout period");
         return "No ticket number found";
     }
 
@@ -407,6 +424,7 @@ public class EmailToTicketTestPage {
         while (System.currentTimeMillis() - startTime < timeout) {
             List<Map<String, String>> emails = EmailReader.readEmailBySubject(subject);
             if (emails != null && !emails.isEmpty()) {
+                ExtentReportManager.getTest().pass("Email found with subject: " + subject);
                 return emails;
             }
             try {
@@ -416,6 +434,7 @@ public class EmailToTicketTestPage {
                 throw new RuntimeException("Thread was interrupted during sleep", e);
             }
         }
+        ExtentReportManager.getTest().fail("Email not found with subject: " + subject + " within the timeout period");
         return Collections.emptyList();
     }
 
@@ -481,6 +500,8 @@ public class EmailToTicketTestPage {
         ticketDetails.put(InstanceConfigKeys.TICKET_STATUS.getValue(), status);
         ticketDetails.put(InstanceConfigKeys.WATCHERDETAILS.getValue(), watcherDetailsText);
         ticketDetails.put(InstanceConfigKeys.ATTACHMENT_NAME.getValue(), attachmentDetails);
+
+        ExtentReportManager.getTest().pass("Ticket details retrieved successfully for ticket number: " + ticketNumber);
         return ticketDetails;
     }
 

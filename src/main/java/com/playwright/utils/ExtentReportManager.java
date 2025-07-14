@@ -3,12 +3,17 @@ package com.playwright.utils;
 import com.aventstack.extentreports.*;
 import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 public class ExtentReportManager {
     private static ExtentReports extent;
     private static ExtentTest test;
 
     public static void initReport() {
-        ExtentSparkReporter spark = new ExtentSparkReporter("test-output/PlaywrightReport.html");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String timestamp = LocalDateTime.now().format(formatter);
+        ExtentSparkReporter spark = new ExtentSparkReporter("test-output/Result-" + timestamp + "-report.html");
         spark.config().setReportName("Playwright Automation Report");
         spark.config().setDocumentTitle("Test Results");
 
