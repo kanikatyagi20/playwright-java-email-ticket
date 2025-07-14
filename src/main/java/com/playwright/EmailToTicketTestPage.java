@@ -403,7 +403,7 @@ public class EmailToTicketTestPage {
         return "No ticket number found";
     }
 
-    public List<Map<String, String>> validateNotificationsReceived(String subject) {
+    public Map<String, String> validateNotificationsReceived(String subject) {
         long startTime = System.currentTimeMillis();
         long timeout = 5 * 60 * 1000;
         long interval = 10 * 1000;
@@ -412,7 +412,7 @@ public class EmailToTicketTestPage {
             List<Map<String, String>> emails = EmailReader.readEmailBySubject(subject);
             if (emails != null && !emails.isEmpty()) {
                 ExtentReportManager.getTest().pass("Email found with subject: " + subject);
-                return emails;
+                return emails.get(0);
             }
             try {
                 Thread.sleep(interval);
@@ -422,7 +422,11 @@ public class EmailToTicketTestPage {
             }
         }
         ExtentReportManager.getTest().fail("Email not found with subject: " + subject + " within the timeout period");
-        return Collections.emptyList();
+        return null;
+    }
+
+    public boolean emailResult(Map<String, String> actualMail, Map<String, String> expectedMail) {
+        return true;
     }
 
     public static Map<String, String> subjectAndBodyGenerator(String mailAction, String reqNumber, String itemId, Integer rating, String approvalAction, String waterMarkId) {

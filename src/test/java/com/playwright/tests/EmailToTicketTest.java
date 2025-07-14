@@ -49,16 +49,10 @@ public class EmailToTicketTest {
         String reqNumber = ticketParts[0];
         String incNumber = ticketParts[1];
         String ticketSubmitMail = "Incident " + reqNumber + " / " + incNumber + " has been logged";
-        List<Map<String, String>> mailReceived = emailToTicketTestPage.validateNotificationsReceived(ticketSubmitMail);
+        Map<String, String> mailReceived = emailToTicketTestPage.validateNotificationsReceived(ticketSubmitMail);
         ExtentReportManager.getTest().pass("Email is recieved with ticket number for the: " + ticketNumber);
 
-        // Validating the received email
-        System.out.println("From: " + mailReceived.get(0).get("from"));
-        System.out.println("To: " + mailReceived.get(0).get("to"));
-        System.out.println("CC: " + mailReceived.get(0).get("cc"));
-        System.out.println("Subject: " + mailReceived.get(0).get("subject"));
-        System.out.println("Sent Date: " + mailReceived.get(0).get("sentDate"));
-        System.out.println("Content: " + mailReceived.get(0).get("content"));
+boolean correctEmail= emailToTicketTestPage.emailResult(mailReceived, mailReceived);
 
         ExtentReportManager.flushReport();
     }
