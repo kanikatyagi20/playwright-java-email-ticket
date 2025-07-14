@@ -5,7 +5,6 @@ import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.WaitForSelectorState;
 import com.playwright.utils.EmailReader;
 import com.playwright.utils.EmailSender;
-import com.playwright.utils.ExcelReader;
 import com.playwright.utils.ExtentReportManager;
 
 import java.time.LocalDateTime;
@@ -14,7 +13,6 @@ import java.util.*;
 
 public class EmailToTicketTestPage {
     private final Page page;
-    private static Map<String, String> instanceData;
 
     private Locator inputUserEmail;
     private Locator nextButton;
@@ -170,20 +168,12 @@ public class EmailToTicketTestPage {
 
     }
 
-    public static void loadInstanceData(String instanceName) {
-        List<Map<String, String>> rows = ExcelReader.getDetailsForInstance(instanceName);
-        if (rows.isEmpty()) {
-            throw new IllegalArgumentException("No Excel data found for instance: " + instanceName);
-        }
-        instanceData = rows.get(0);
-    }
 
     //Login method
-    public void login() {
-        if (instanceData == null) throw new IllegalStateException("Instance data not loaded.");
-        String url = instanceData.get(InstanceConfigKeys.URL.getValue());
-        String user = instanceData.get(InstanceConfigKeys.USERNAME.getValue());
-        String pass = instanceData.get(InstanceConfigKeys.PASSWORD.getValue());
+    public void login(Map<String, String> loginDetails) {
+        String url = loginDetails.get(InstanceConfigKeys.URL.getValue());
+        String user = loginDetails.get(InstanceConfigKeys.USERNAME.getValue());
+        String pass = loginDetails.get(InstanceConfigKeys.PASSWORD.getValue());
 
         page.navigate(url);
         page.reload();
@@ -266,11 +256,10 @@ public class EmailToTicketTestPage {
         }
     }
 
-    public void mailBoxConfiguration(String expectedMailbox, String company) {
-        if (instanceData == null) throw new IllegalStateException("Instance data not loaded.");
-        String vendor = instanceData.get(InstanceConfigKeys.VENDOR.getValue());
-        String authType = instanceData.get(InstanceConfigKeys.AUTH_TYPE.getValue());
-        String status = instanceData.get(InstanceConfigKeys.STATUS.getValue());
+    public void mailBoxConfiguration(String expectedMailbox, String company, Map<String, String> mailBoxDetails) {
+        String vendor = mailBoxDetails.get(InstanceConfigKeys.VENDOR.getValue());
+        String authType = mailBoxDetails.get(InstanceConfigKeys.AUTH_TYPE.getValue());
+        String status = mailBoxDetails.get(InstanceConfigKeys.STATUS.getValue());
 
         //Validating if Mailbox already exists
         searchMailbox(expectedMailbox);
@@ -288,20 +277,17 @@ public class EmailToTicketTestPage {
         okButton.click();
 
         switch (popUpMessage) {
-            case "No changes detected in the provided payload" -> addEditCredentials(vendor);
+            case "No changes detected in the provided payload" -> addEditCredentials(vendor, mailBoxDetails);
             case "Record saved successfully" -> {
                 searchMailbox(expectedMailbox);
-                addEditCredentials(vendor);
+                addEditCredentials(vendor, mailBoxDetails);
             }
             case "Mailbox already exists for a different company" ->
                     ExtentReportManager.getTest().fail("Mailbox already exists for a different company: " + expectedMailbox);
         }
     }
 
-    public void addEditCredentials(String vendor) {
-        if (instanceData == null || instanceData.isEmpty()) {
-            throw new IllegalStateException("Instance data is not loaded. Call loadInstanceData() first.");
-        }
+    public void addEditCredentials(String vendor, Map<String, String> credentialsDetails) {
         page.waitForLoadState(LoadState.LOAD);
 
         // Click on Add or Edit button
@@ -309,17 +295,17 @@ public class EmailToTicketTestPage {
         page.waitForLoadState(LoadState.LOAD);
 
         // Fill common credentials
-        applicationId.fill(instanceData.get(InstanceConfigKeys.APPLICATION_ID.getValue()));
-        clientId.fill(instanceData.get(InstanceConfigKeys.TENANT_ID.getValue()));
-        secretKey.fill(instanceData.get(InstanceConfigKeys.SECRET_KEY.getValue()));
+        applicationId.fill(credentialsDetails.get(InstanceConfigKeys.APPLICATION_ID.getValue()));
+        clientId.fill(credentialsDetails.get(InstanceConfigKeys.TENANT_ID.getValue()));
+        secretKey.fill(credentialsDetails.get(InstanceConfigKeys.SECRET_KEY.getValue()));
 
         // Fill vendor-specific fields
         switch (vendor.toLowerCase()) {
             case "outlook" -> {
-                objectId.fill(instanceData.get(InstanceConfigKeys.OBJECT_ID.getValue()));
-                displayName.fill(instanceData.get(InstanceConfigKeys.DISPLAY_NAME.getValue()));
+                objectId.fill(credentialsDetails.get(InstanceConfigKeys.OBJECT_ID.getValue()));
+                displayName.fill(credentialsDetails.get(InstanceConfigKeys.DISPLAY_NAME.getValue()));
             }
-            case "gmail" -> refreshToken.fill(instanceData.get(InstanceConfigKeys.SX_INBOUND.getValue()));
+            case "gmail" -> refreshToken.fill(credentialsDetails.get(InstanceConfigKeys.SX_INBOUND.getValue()));
             default -> throw new IllegalArgumentException("Unsupported vendor: " + vendor);
         }
         saveCredentials.click();
@@ -329,16 +315,16 @@ public class EmailToTicketTestPage {
         ExtentReportManager.getTest().pass("Credentials for " + vendor + " Mailbox are configured successfully");
     }
 
-    public void emailToTicketConfiguration() {
+    public void emailToTicketConfiguration(Map<String, String> mailboxDetails) {
 
         //navigating to Mailbox Configuration page
         navigateToMailboxConfiguration();
 
-        String mailbox = instanceData.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue());
-        String company = instanceData.get(InstanceConfigKeys.COMPANY_NAME.getValue());
+        String mailbox = mailboxDetails.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue());
+        String company = mailboxDetails.get(InstanceConfigKeys.COMPANY_NAME.getValue());
 
         //Configuring Mailbox and its Credentials
-        mailBoxConfiguration(mailbox, company);
+        mailBoxConfiguration(mailbox, company, mailboxDetails);
 
         //navigating to Mailbox Actions
         mailboxActions.click();
@@ -351,27 +337,27 @@ public class EmailToTicketTestPage {
         companyInput.fill(company);
         searchedCompanySelect.click();
         mailboxDropdown.selectOption(mailbox);
-        serviceInput.fill(instanceData.get(InstanceConfigKeys.OFFERING_NAME.getValue()));
+        serviceInput.fill(mailboxDetails.get(InstanceConfigKeys.OFFERING_NAME.getValue()));
         guestAndOfferingSelect.click();
 
         //Filling Mailbox Filters
-        whiteListedDomains.fill(instanceData.get(InstanceConfigKeys.WHITELISTED_DOMAINS.getValue()));
-        alwaysException.fill(instanceData.get(InstanceConfigKeys.ALWAYS_PROCESS_EXCEPTION.getValue()));
-        neverException.fill(instanceData.get(InstanceConfigKeys.NEVER_PROCESS_EXCEPTION.getValue()));
+        whiteListedDomains.fill(mailboxDetails.get(InstanceConfigKeys.WHITELISTED_DOMAINS.getValue()));
+        alwaysException.fill(mailboxDetails.get(InstanceConfigKeys.ALWAYS_PROCESS_EXCEPTION.getValue()));
+        neverException.fill(mailboxDetails.get(InstanceConfigKeys.NEVER_PROCESS_EXCEPTION.getValue()));
 
         //Filling Defaults values
-        impact.selectOption(instanceData.get(InstanceConfigKeys.DEFAULT_IMPACT.getValue()));
-        urgency.selectOption(instanceData.get(InstanceConfigKeys.DEFAULT_URGENCY.getValue()));
+        impact.selectOption(mailboxDetails.get(InstanceConfigKeys.DEFAULT_IMPACT.getValue()));
+        urgency.selectOption(mailboxDetails.get(InstanceConfigKeys.DEFAULT_URGENCY.getValue()));
 
         //Filling User Verification details
-        userVerificationType.selectOption(instanceData.get(InstanceConfigKeys.USER_VERIFICATION_TYPE.getValue()));
+        userVerificationType.selectOption(mailboxDetails.get(InstanceConfigKeys.USER_VERIFICATION_TYPE.getValue()));
 
-        if (instanceData.get(InstanceConfigKeys.USER_VERIFICATION_TYPE.getValue()).equalsIgnoreCase("Create with Guest Account")) {
-            selectGuestUser.fill(instanceData.get(InstanceConfigKeys.GUEST_USER_EMAIL.getValue()));
+        if (mailboxDetails.get(InstanceConfigKeys.USER_VERIFICATION_TYPE.getValue()).equalsIgnoreCase("Create with Guest Account")) {
+            selectGuestUser.fill(mailboxDetails.get(InstanceConfigKeys.GUEST_USER_EMAIL.getValue()));
             page.waitForLoadState(LoadState.LOAD);
             guestAndOfferingSelect.click();
         }
-        statusDropdown.selectOption(instanceData.get(InstanceConfigKeys.ACTION_STATUS.getValue()));
+        statusDropdown.selectOption(mailboxDetails.get(InstanceConfigKeys.ACTION_STATUS.getValue()));
         saveButton.click();
         okButton.click();
         page.waitForLoadState(LoadState.LOAD);
@@ -383,10 +369,10 @@ public class EmailToTicketTestPage {
     }
 
     //Email related Methods
-    public String sentEmailAndGetTicketNumber(String subject, String body, String attachment) {
+    public String sentEmailAndGetTicketNumber(String subject, String body, String attachment, String mailBoxId) {
 
-        EmailSender.sendEmail(instanceData.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue()), subject, body, attachment);
-        ExtentReportManager.getTest().pass("Email sent with subject: " + subject + " to mailbox: " + instanceData.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue()));
+        EmailSender.sendEmail(mailBoxId, subject, body, attachment);
+        ExtentReportManager.getTest().pass("Email sent with subject: " + subject + " to mailbox: " + mailBoxId);
 
         navigateToIncidentListPage();
 
@@ -458,8 +444,7 @@ public class EmailToTicketTestPage {
 
             case "approval":
                 subject = String.format("%s-%s", approvalAction, itemId);
-                body = String.format(
-                        "%s\n\nId: %s", comment, waterMarkId);
+                body = String.format("%s\n\nId: %s", comment, waterMarkId);
                 break;
 
             case "incident":

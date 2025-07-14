@@ -9,7 +9,7 @@ import java.util.*;
 
 public class ExcelReader {
 
-    public static List<Map<String, String>> getDetailsForInstance(String instanceName) {
+    public static Map<String, String> getMailBoxDetails(String instanceName) {
         List<Map<String, String>> matchedRows = new ArrayList<>();
 
         String filePath = "src/test/resources/InstanceDetails.xlsx";
@@ -59,7 +59,7 @@ public class ExcelReader {
             throw new RuntimeException("Failed to read Excel file: " + filePath + " - " + e.getMessage(), e);
         }
 
-        return matchedRows;
+        return matchedRows.get(0);
     }
 
     private static String getCellValue(Cell cell) {

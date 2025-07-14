@@ -2,6 +2,8 @@ package com.playwright.tests;
 
 import com.microsoft.playwright.*;
 import com.playwright.EmailToTicketTestPage;
+import com.playwright.InstanceConfigKeys;
+import com.playwright.utils.ExcelReader;
 import com.playwright.utils.ExtentReportManager;
 import org.testng.annotations.*;
 
@@ -28,21 +30,20 @@ public class EmailToTicketTest {
     @Test
     public void verifyTicketCreationForExistingUserWithAttachments() {
         ExtentReportManager.initReport();
-        EmailToTicketTestPage.loadInstanceData("TestingProd");
+        Map<String, String> mailboxDetails = ExcelReader.getMailBoxDetails("TestingProd");
         emailToTicketTestPage = new EmailToTicketTestPage(page);
 
         //Login into Application
-        emailToTicketTestPage.login();
+        emailToTicketTestPage.login(mailboxDetails);
 
         //Doing Mailbox configuration
-        emailToTicketTestPage.emailToTicketConfiguration();
-
+        emailToTicketTestPage.emailToTicketConfiguration(mailboxDetails);
         //Sending email to the configured mailbox for ticket creation
         Map<String, String> mailToSent = EmailToTicketTestPage.subjectAndBodyGenerator("incident", null, null, null, null, null);
         String subjectForEmail = mailToSent.get("subject");
         String emailBody = mailToSent.get("body");
         String attachmentPath = "src/test/resources/JIRA.png";
-        String ticketNumber = emailToTicketTestPage.sentEmailAndGetTicketNumber(subjectForEmail, emailBody, attachmentPath);
+        String ticketNumber = emailToTicketTestPage.sentEmailAndGetTicketNumber(subjectForEmail, emailBody, attachmentPath, mailboxDetails.get(InstanceConfigKeys.MAILBOX_EMAIL.getValue()));
         String[] parts = ticketNumber.split("\n");
         String[] ticketParts = parts[0].split("-");
         String reqNumber = ticketParts[0];
@@ -62,15 +63,6 @@ public class EmailToTicketTest {
         ExtentReportManager.flushReport();
     }
 
-    @Test
-    public void t1() {
-        emailToTicketTestPage = new EmailToTicketTestPage(page);
-        EmailToTicketTestPage.loadInstanceData("TestingProd");
-        emailToTicketTestPage.login();
-        Map<String, String> details = emailToTicketTestPage.getAllTicketDetails("INC000000011380");
-        System.out.println("OK");
-
-    }
 
     @AfterMethod
     public void cleanup() {
