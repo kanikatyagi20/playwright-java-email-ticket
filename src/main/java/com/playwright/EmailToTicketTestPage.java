@@ -192,6 +192,7 @@ public class EmailToTicketTestPage {
             inputUserEmail.fill(user);
         }
 
+
         nextButton.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
         nextButton.click();
 
